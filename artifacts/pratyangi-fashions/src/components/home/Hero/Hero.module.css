@@ -1,0 +1,54 @@
+.hero {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  aspect-ratio: 1440 / 591;
+  min-height: clamp(220px, 41vw, 591px);
+  overflow: hidden;
+  background: #f2ede8;
+  isolation: isolate;
+}
+
+.scene { position: absolute; inset: 0; will-change: transform; }
+
+.showroom {
+  object-fit: cover;
+  object-position: center top;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    aspect-ratio: 1440 / 620;
+    min-height: clamp(200px, 43vw, 520px);
+  }
+
+  .showroom {
+    object-position: center 12%;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero {
+    aspect-ratio: 4 / 3;
+    min-height: clamp(240px, 75vw, 420px);
+  }
+
+  .showroom {
+    object-fit: cover;
+    object-position: center 18%;
+  }
+}
+
+@media (max-width: 380px) {
+  .hero {
+    min-height: 230px;
+  }
+
+  .showroom {
+    object-position: center 22%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene { transform: none !important; }
+}

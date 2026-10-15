@@ -1,0 +1,25 @@
+kind = "web"
+previewPath = "/"
+title = "Pratyangi Fashions"
+description = "A responsive fashion storefront for Pratyangi Fashions, recreating the brand website shown in the supplied Figma prototype and screen recording. The initial phase is frontend-only with interactive storefront components."
+version = "1.0.0"
+id = "artifacts/pratyangi-fashions"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24329
+
+[services.development]
+run = "pnpm --filter @workspace/pratyangi-fashions run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/pratyangi-fashions", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/pratyangi-fashions/out"
+
+
+[services.env]
+PORT = "24329"
+BASE_PATH = "/"

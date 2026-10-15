@@ -1,0 +1,53 @@
+.section { padding: 64px 5.5% 48px; background: #e5e3d9; }
+.heading { position: relative; max-width: 1280px; margin: 0 auto 13px; text-align: center; }
+.heading h2 { margin: 0; color: var(--gold); font: 600 32px/normal var(--font-display); }
+.seeAll {
+  position: absolute; right: 0; bottom: -20px; display: inline-flex; align-items: center; gap: 2px;
+  color: var(--gold); font-size: 16px; text-decoration: none;
+}
+.seeAll:hover { color: var(--burgundy); }
+
+.grid {
+  max-width: 1280px; margin: 0 auto; padding: 47px 0 24px;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 302px)); justify-content: space-between; gap: 24px;
+}
+.card {
+  position: relative; overflow: hidden; min-width: 0;
+  padding: 24px 32px; border-radius: 12px; background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.glow {
+  position: absolute; z-index: 0; left: -21.19%; top: calc(57px - 194px); width: 142.38%; height: auto;
+  pointer-events: none;
+}
+.card > :not(.glow) { position: relative; z-index: 1; }
+.photo {
+  position: relative; width: 100%; aspect-ratio: 238 / 302; overflow: hidden;
+  border: 1px solid #d4af37; border-radius: 8px; background: #ded4bd;
+}
+.photo img { object-fit: cover; }
+.stars { width: 176px; max-width: 100%; height: auto; }
+.card h3 { margin: 0; color: #800020; font: 400 16px/normal var(--font-body); }
+.card p { margin: 0; color: #800020; font: 300 16px/normal var(--font-body); }
+.note { max-width: 1280px; margin: 0 auto; color: #6f655b; font-size: 12px; text-align: center; }
+
+@media (max-width: 1200px) {
+  .card { padding: 20px; }
+  .card h3 { font-size: 14px; }
+  .card p { font-size: 14px; }
+}
+@media (max-width: 900px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .section { padding: 44px 16px 36px; }
+  .heading h2 { font-size: clamp(22px, 6vw, 25px); }
+  .seeAll { position: static; margin-top: 6px; font-size: 13px; }
+  .grid {
+    display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 14px;
+    margin: 0 -16px; padding: 24px 16px 20px; scrollbar-width: none;
+  }
+  .grid::-webkit-scrollbar { display: none; }
+  .card { flex: 0 0 min(74%, 280px); scroll-snap-align: start; }
+}

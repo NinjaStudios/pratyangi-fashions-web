@@ -1,0 +1,38 @@
+.footer { background: #222222; color: #dedbd4; }
+.footerMain { max-width: 1440px; margin: auto; padding: 46px 5.5% 38px; display: grid; grid-template-columns: 1.55fr repeat(4, 1fr); gap: 35px; }
+.footerBrand img { display: block; width: min(100%, 190px); height: auto; mix-blend-mode: screen; filter: brightness(1.2); }
+.footerBrand p { margin: 19px 0 12px; color: #dedbd4; font-size: 11px; line-height: 1.6; }
+.footerSocial { display: flex; align-items: center; gap: 9px; }
+.footerSocial span { width: 19px; height: 19px; display: grid; place-items: center; color: #d9d6ce; font-size: 12px; border: 1px solid #817d76; border-radius: 50%; }
+.footerColumn { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.footerColumn h3 { margin: 2px 0 5px; color: #f4efe6; font: 500 10px var(--font-display); letter-spacing: .08em; }
+.footerColumn span { color: #d0ccc4; font-size: 10px; line-height: 1.3; }
+.paymentRow { min-height: 64px; padding: 12px 5.5%; display: flex; align-items: center; justify-content: space-between; gap: 22px; border-top: 1px solid #565656; max-width: 1440px; margin: auto; }
+.paymentMethods { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.paymentMethods > span { margin-right: 8px; font-size: 10px; }
+.paymentMethods b { min-width: 40px; padding: 6px 8px; text-align: center; background: #3e3e3e; color: #e6e3dd; font-size: 9px; font-weight: 500; }
+.storeBadges { display: flex; gap: 8px; }
+.storeBadges > span { min-width: 91px; min-height: 33px; padding: 3px 7px; border: 1px solid #a6a6a6; border-radius: 5px; display: flex; gap: 5px; align-items: center; color: #fff; font-size: 15px; line-height: .95; }
+.storeBadges small { font-size: 6px; }
+.storeBadges strong { font-size: 10px; font-weight: 600; }
+.copyright { min-height: 52px; display: flex; justify-content: center; align-items: center; gap: 4px; padding: 12px; border-top: 1px solid #454545; color: #dedbd4; font-size: 10px; }
+.copyright svg { color: #be4149; }
+
+@media (max-width: 900px) {
+  .footerMain { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 25px 20px; }
+  .footerBrand { grid-column: 1 / -1; }
+  .footerBrand img { width: 175px; }
+}
+@media (max-width: 700px) {
+  .footerMain { padding: 34px 20px 28px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 25px 17px; }
+  .footerBrand p { margin-top: 12px; }
+  .paymentRow { padding: 17px 20px; align-items: flex-start; flex-direction: column; gap: 15px; }
+  .paymentMethods { gap: 5px; }
+  .paymentMethods > span { flex-basis: 100%; margin: 0 0 3px; }
+  .storeBadges { align-self: flex-end; }
+  .copyright { font-size: 9px; text-align: center; flex-wrap: wrap; }
+}
+@media (max-width: 480px) {
+  .storeBadges { align-self: stretch; justify-content: center; flex-wrap: wrap; }
+  .paymentRow { align-items: center; }
+}

@@ -1,0 +1,139 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ChevronDown, ChevronRight, Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
+import { easeOutExpo } from "@/lib/motion/presets";
+import styles from "./SiteHeader.module.css";
+
+const menuLinks = [
+  { label: "Shop by Category", href: "/#categories" },
+  { label: "New Arrivals", href: "/new-arrivals" },
+  { label: "Your Bag", href: "/bag" },
+  { label: "Loved by our Customers", href: "/#reviews" },
+  { label: "Why Pratyangi Fashions", href: "/#why-pratyangi" },
+];
+
+const defaultSearchEntries = [
+  { label: "New Arrivals", href: "/new-arrivals" },
+  { label: "Uppada", href: "/new-arrivals" },
+  { label: "Banarasi", href: "/new-arrivals" },
+  { label: "Kanchipuram Pattu", href: "/new-arrivals" },
+  { label: "Dharmavaram", href: "/new-arrivals" },
+  { label: "Soft Silk", href: "/new-arrivals" },
+  { label: "Bridal Sarees", href: "/new-arrivals" },
+  { label: "Wedding Collection", href: "/#arrivals" },
+  { label: "Festive Collections", href: "/#arrivals" },
+  { label: "Best Sellers", href: "/#arrivals" },
+];
+
+type SiteHeaderProps = {
+  bagCount: number;
+};
+
+export function SiteHeader({ bagCount }: SiteHeaderProps) {
+  const reduceMotion = useReducedMotion();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [panel, setPanel] = useState<"search" | "account" | null>(null);
+  const [query, setQuery] = useState("");
+
+  const term = query.trim().toLowerCase();
+  const results = term ? defaultSearchEntries.filter((entry) => entry.label.toLowerCase().includes(term)) : defaultSearchEntries;
+  const closePanel = () => setPanel(null);
+
+  return (
+    <>
+      <motion.header
+        className={styles.header}
+        initial={reduceMotion ? false : { y: -24, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.45, ease: easeOutExpo }}
+      >
+        <div className={styles.headerInner}>
+          <button className={styles.shopToggle} type="button" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <X size={16} /> : <Menu size={16} />}
+            <span>Shop</span><ChevronDown size={13} />
+          </button>
+          <Link className={styles.brand} href="/" aria-label="Pratyangi Fashions home">
+            <span className={styles.brandLogo}>
+              <Image src="/images/reference/brand-logo.png" alt="" width={61} height={61} priority />
+            </span>
+            <span className={styles.brandText}>
+              <span className={styles.brandName}>PRATYANGI FASHIONS</span>
+              <span className={styles.brandTagline}>TRADITION MEETS ELEGANCE</span>
+            </span>
+          </Link>
+          <div className={styles.headerActions}>
+            <button className={styles.searchButton} type="button" aria-label="Search catalog" onClick={() => { setPanel("search"); setMenuOpen(false); }}>
+              <span>Search</span><Search size={17} />
+            </button>
+            <Link className={styles.iconButton} href="/bag" aria-label={`Open your bag, ${bagCount} items`}>
+              <ShoppingBag size={21} /><span className={styles.count}>{bagCount}</span>
+            </Link>
+            <button className={styles.iconButton} type="button" aria-label="Account demo" onClick={() => { setPanel("account"); setMenuOpen(false); }}>
+              <UserRound size={22} />
+            </button>
+          </div>
+        </div>
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.nav
+              className={styles.menuPanel}
+              aria-label="Shop sections"
+              initial={reduceMotion ? false : { opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.22 }}
+            >
+              <div className={styles.menuPanelHeading}>Explore Pratyangi</div>
+              {menuLinks.map((link) => (
+                <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>{link.label} <ChevronRight size={15} /></Link>
+              ))}
+            </motion.nav>
+          )}
+        </AnimatePresence>
+      </motion.header>
+
+      <AnimatePresence>
+        {panel && (
+          <motion.div
+            className={styles.scrim}
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={reduceMotion ? undefined : { opacity: 0 }}
+            onMouseDown={(event) => { if (event.target === event.currentTarget) closePanel(); }}
+          >
+            <motion.section
+              className={styles.dialog}
+              role="dialog"
+              aria-modal="true"
+              aria-label={panel === "search" ? "Search catalog" : "Account demo"}
+              initial={reduceMotion ? false : { opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: 12, scale: 0.98 }}
+              transition={{ duration: 0.24, ease: easeOutExpo }}
+            >
+              <button type="button" className={styles.closeButton} onClick={closePanel} aria-label="Close panel"><X size={20} /></button>
+              {panel === "search" ? <>
+                <h2>Search</h2>
+                <label className={styles.srOnly} htmlFor="catalog-search">Search the catalog</label>
+                <div className={styles.searchField}><Search size={18} /><input id="catalog-search" autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search the catalog" /></div>
+                <div className={styles.searchResults}>
+                  {results.length ? results.map((entry) => (
+                    <Link href={entry.href} key={entry.label} onClick={closePanel}>{entry.label}<ChevronRight size={15} /></Link>
+                  )) : <p>No matching items in this catalog preview.</p>}
+                </div>
+              </> : <>
+                <h2>Account</h2>
+                <p className={styles.dialogNote}>Account access is not connected in this local demo.</p>
+                <div className={styles.accountMark}><UserRound size={22} /><span>Sign-in functionality is unavailable in this preview.</span></div>
+              </>}
+            </motion.section>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
