@@ -5,6 +5,7 @@ Online storefront for Pratyangi Fashions (silk sarees), built from the supplied 
 **Phase:** frontend UI. The backend (orders, accounts, payments) is planned for a later phase.
 Progress, decisions and open items are tracked in [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md).
 The backend design is in [docs/BACKEND_PLAN.md](docs/BACKEND_PLAN.md).
+**New to the project?** Every command is explained in plain English in [docs/COMMANDS.md](docs/COMMANDS.md).
 
 ## Technology stack (decided 2026-10-16)
 
@@ -100,13 +101,20 @@ What is checked (24 test runs):
 - **Hero and Shop by Category:** the hero stays pinned while the category section slides over it, the blur follows the
   scroll and reverses on the way back up, and nothing blurs when "reduce motion" is on.
 
-Watching and debugging:
+In plain words:
 
-- `pnpm test:headed` opens a real browser window and runs the tests visibly.
-- `pnpm test:ui` opens Playwright's viewer: choose a test, step through it, and see the page at every step.
-- After a run, `pnpm --filter pratyangi-web run test:e2e:report` opens the HTML report. Failed tests include a screenshot and a video.
+- **`pnpm test`** builds the website, then a robot opens it in an invisible browser, clicks around like a visitor and
+  checks that everything works. Success ends with `24 passed`; a failure shows a red `x` and what went wrong.
+- **`pnpm test:headed`** does the same in a visible browser window, so you can watch the robot work.
+- **`pnpm test:ui`** opens Playwright's viewer: choose a test, run it, and step back and forward to see the page at every step.
+- **`pnpm --filter pratyangi-web run test:e2e:report`** opens the report of the last run in your browser. Failed tests
+  include a screenshot and a video. Press Ctrl + C in the terminal to close it.
+- **`pnpm --filter pratyangi-web exec playwright install chromium`** downloads the test browser. Run it once per computer.
 - To rerun without rebuilding: `pnpm --filter pratyangi-web exec playwright test` (the last build in `apps/web/out` is used).
 - To run one file or one size: `pnpm --filter pratyangi-web exec playwright test hero-scroll --project=desktop`.
+
+Every command in this project, including Git and Vercel, is explained step by step in
+[docs/COMMANDS.md](docs/COMMANDS.md).
 
 If a test fails after you change the design on purpose, update the test in `apps/web/e2e` to match.
 
