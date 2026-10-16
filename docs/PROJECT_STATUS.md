@@ -58,7 +58,7 @@ The design source is the Figma prototype plus the supplied PDFs, screenshots and
 | AI try-on | Dormant. Needs the backend and an AI provider key |
 | Legal pages (privacy, terms, shipping, GST) | Footer links exist, pages and copy do not |
 | SEO metadata per page, sitemap, analytics | Not started |
-| Automated UI tests (Playwright) | Recommended before launch |
+| More automated tests | Playwright covers pages, header, cart, carousel and hero scroll; add tests as features are added, and run them in GitHub Actions on every pull request |
 
 ## Decisions
 
@@ -107,9 +107,13 @@ The design source is the Figma prototype plus the supplied PDFs, screenshots and
 - [ ] README and this document current
 - [ ] A named person responsible for renewals and updates
 
-## How the UI was checked
+## How the UI is checked
 
-During development the pages were opened in headless Chrome and driven by scripts: layouts at eight widths,
-scroll positions, interactions (menus, search, carousel, add to cart), console errors, page weight and layout shift,
-plus before/after screenshot comparison when images were changed. These scripts are not stored in the repository.
-Adding Playwright would make the same checks repeatable by anyone with one command.
+Automated: `pnpm test` runs 24 Playwright browser tests (12 at desktop size, 12 at phone size) against the production
+build: page titles, broken images, console errors, horizontal overflow, header menu and search dialog keyboard
+behaviour, add to cart, the category carousel, and the hero/category scroll layering including reduced motion.
+Details and how to watch the tests run are in the README. A deliberate break of the hero pinning was used once to
+confirm the tests fail when the behaviour regresses.
+
+Not automated (checked by hand during development): layouts at eight widths from 320 px to 1920 px, page weight and
+layout shift, and before/after screenshot comparison when images changed.

@@ -7,6 +7,9 @@
     "dev": "pnpm --filter pratyangi-web run dev",
     "build": "pnpm --filter pratyangi-web run build",
     "preview": "pnpm --filter pratyangi-web run preview",
-    "typecheck": "pnpm --filter pratyangi-web run typecheck"
+    "typecheck": "pnpm --filter pratyangi-web run typecheck",
+    "test": "pnpm --filter pratyangi-web run test:e2e",
+    "test:ui": "pnpm --filter pratyangi-web run test:e2e:ui",
+    "test:headed": "pnpm --filter pratyangi-web run test:e2e:headed"
   }
 }
