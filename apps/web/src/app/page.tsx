@@ -181,7 +181,7 @@ export default function HomePage() {
             className={styles.reviewViewport}
             initial={{ opacity: 0, y: 32 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
+            viewport={{ once: false, amount: 0.2 }}
             transition={reduceMotion ? { duration: 0 } : { duration: 0.8, ease: easeOutExpo, delay: 0.2 }}
           >
             <div className={styles.reviewTrack}>
@@ -205,17 +205,17 @@ export default function HomePage() {
 
       <section className={styles.exclusiveSection} id="exclusives">
         <ScrollReveal className={styles.exclusiveOffers}>
-          <h2>Exclusive Offers</h2>
+          <motion.h2 {...fadeUp(reduceMotion, 0)}>Exclusive Offers</motion.h2>
           <div className={styles.offerGrid}>
             {[
               { icon: "20%", title: "Flat 20% Off", detail: <>On first order using code<br /><b>FIRST20</b></> },
               { icon: <Image src="/images/figma/home/offer-party.svg" alt="" width={48} height={48} />, title: "Festival Special", detail: <>Free blouse piece with every saree this season</> },
               { icon: <Image src="/images/figma/home/offer-discount.svg" alt="" width={48} height={48} />, title: "Flat 20% Off", detail: <>Extra 15% off on bridal collections above ₹15,000</> },
             ].map((offer, index) => (
-              <article className={styles.offerCard} key={`${offer.title}-${index}`}>
+              <motion.article className={styles.offerCard} key={`${offer.title}-${index}`} {...fadeUp(reduceMotion, 0.1 + index * 0.12)} whileHover={reduceMotion ? undefined : { y: -3, transition: { duration: 0.25 } }}>
                 <span className={styles.offerMark}>{offer.icon}</span><h3>{offer.title}</h3><p>{offer.detail}</p>
                 <button type="button" onClick={() => setOfferMessage(index === 0 ? "Local demo only — code FIRST20 is displayed but cannot be redeemed." : "Local demo only — this offer is not redeemable.")}>Claim Offer</button>
-              </article>
+              </motion.article>
             ))}
           </div>
           {offerMessage && <p className={styles.offerMessage} role="status">{offerMessage}</p>}
@@ -283,13 +283,13 @@ export default function HomePage() {
       <ScrollReveal>
         <section className={styles.newsletter} id="newsletter">
           <div className={styles.newsletterContent}>
-            <h2>Step into the <strong>PRATYANGI FASHIONS</strong> circle</h2>
-            <form className={styles.newsletterForm} onSubmit={submitNewsletter}>
+            <motion.h2 {...fadeUp(reduceMotion, 0)}>Step into the <strong>PRATYANGI FASHIONS</strong> circle</motion.h2>
+            <motion.form className={styles.newsletterForm} onSubmit={submitNewsletter} {...fadeUp(reduceMotion, 0.12)}>
               <label className={styles.srOnly} htmlFor="newsletter-email">Your email address</label>
               <input id="newsletter-email" type="email" required placeholder="Enter your Email address" value={newsletterEmail} onChange={(event) => setNewsletterEmail(event.target.value)} />
               <button type="submit">Subscribe</button>
-            </form>
-            <p className={styles.newsletterNote} aria-live="polite">{newsletterMessage || "Get exclusive offers, new arrivals and styling tips delivered to you every week."}</p>
+            </motion.form>
+            <motion.p className={styles.newsletterNote} aria-live="polite" {...fadeUp(reduceMotion, 0.24)}>{newsletterMessage || "Get exclusive offers, new arrivals and styling tips delivered to you every week."}</motion.p>
             <p className={styles.localNotice}>Local demo only — no subscription is sent.</p>
           </div>
         </section>

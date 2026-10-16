@@ -47,6 +47,13 @@
   position: absolute;
 }
 
+/* Wrappers for the page-load entrance (the model and its stand rise together; the stage settles in). */
+.modelIntro,
+.plateIntro {
+  position: absolute;
+  inset: 0;
+}
+
 .model {
   position: absolute;
   will-change: transform, opacity;

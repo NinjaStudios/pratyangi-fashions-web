@@ -261,9 +261,10 @@ export function NewArrivalsView() {
 
             {visible.length ? (
               <div className={styles.grid}>
-                {visible.map((product) => (
+                {visible.map((product, index) => (
                   <ProductCard
                     key={product.id}
+                    revealIndex={index}
                     id={product.id}
                     title={product.name}
                     imageSrc={product.image}

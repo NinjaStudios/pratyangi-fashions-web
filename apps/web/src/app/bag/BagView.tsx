@@ -184,9 +184,10 @@ export function BagView() {
           <p>Complete your look with these beautiful sarees</p>
         </div>
         <div className={styles.recommendedGrid}>
-          {homeProducts.map((product) => (
+          {homeProducts.map((product, index) => (
             <ProductCard
               key={product.id}
+              revealIndex={index}
               id={product.id}
               title={product.name}
               imageSrc={product.image}

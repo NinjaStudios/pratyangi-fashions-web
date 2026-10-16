@@ -16,12 +16,16 @@ const soft = cubicBezier(0.45, 0, 0.2, 1);
 
 const pct = (value: number, total: number) => `${(value / total) * 100}%`;
 
+// Seconds before each model's entrance on page load: the centre first, then outwards to the edges.
+const introDelay = (id: string) => (id === "center" ? 0.25 : id.endsWith("-1") ? 0.4 : id.endsWith("-2") ? 0.55 : 0.7);
+
 function HeroModelLayer({ model, progress, still }: { model: HeroModel; progress: MotionValue<number>; still: boolean }) {
   // Sideways drift is a percentage of the model's own width, so it scales with the artboard.
   const travel = still ? 0 : (model.travel / model.width) * 100;
   const x = useTransform(progress, [0, 1], ["0%", `${travel}%`], { ease: soft });
   const fade = model.fade;
   const plinth = model.plinth;
+  const reduce = Boolean(useReducedMotion());
   const opacity = useTransform(progress, fade ? [fade.from, fade.to] : [0, 1], [1, fade && !still ? fade.end : 1], { ease: soft });
 
   return (
@@ -38,6 +42,12 @@ function HeroModelLayer({ model, progress, still }: { model: HeroModel; progress
       }}
       data-hero-model={model.id}
     >
+      <motion.div
+        className={styles.modelIntro}
+        initial={{ opacity: 0, y: 56 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={reduce ? { duration: 0 } : { duration: 1, ease: easeOutExpo, delay: introDelay(model.id) }}
+      >
       {plinth && (
         <div
           className={styles.plinth}
@@ -52,6 +62,7 @@ function HeroModelLayer({ model, progress, still }: { model: HeroModel; progress
         </div>
       )}
       <Image src={model.src} alt="" fill priority sizes="30vw" aria-hidden="true" />
+      </motion.div>
     </motion.div>
   );
 }
@@ -72,13 +83,17 @@ export function Hero({ coverProgress }: HeroProps) {
       className={styles.hero}
       id="top"
       aria-label="Pratyangi Fashions virtual showroom"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={reduceMotion ? { duration: 0 } : { duration: 0.55, ease: easeOutExpo }}
     >
       <motion.div className={styles.stage} style={{ opacity: stageOpacity }}>
         <div className={styles.scene}>
-          <Image className={styles.plate} src={heroStage.src} alt={heroStage.alt} fill priority sizes="100vw" />
+          <motion.div
+            className={styles.plateIntro}
+            initial={{ opacity: 0, scale: 1.08 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={reduceMotion ? { duration: 0 } : { duration: 1, ease: easeOutExpo }}
+          >
+            <Image className={styles.plate} src={heroStage.src} alt={heroStage.alt} fill priority sizes="100vw" />
+          </motion.div>
           {heroModels.map((model) => (
             <HeroModelLayer key={model.id} model={model} progress={coverProgress} still={reduceMotion} />
           ))}

@@ -42,6 +42,7 @@ for (const width of widths) {
 test("header icons are the same weight and comfortable to tap on a phone", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   await page.goto("/");
+  await page.waitForTimeout(900); // the header slides in on load; measure once it has settled
   const bag = (await page.getByRole("link", { name: /Open your bag/ }).boundingBox())!;
   const account = (await page.getByRole("link", { name: "My account" }).boundingBox())!;
   const search = (await page.getByRole("button", { name: "Search catalog" }).boundingBox())!;

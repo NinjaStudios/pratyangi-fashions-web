@@ -23,7 +23,7 @@ export function RevealHeading({ title, href, className, seeAllClassName }: Revea
   const transition = (delay: number) => (reduceMotion ? { duration: 0 } : { duration: 0.8, ease: easeOutExpo, delay });
 
   return (
-    <motion.div className={className} initial="hidden" whileInView="shown" viewport={{ once: true, amount: 0.6 }}>
+    <motion.div className={className} initial="hidden" whileInView="shown" viewport={{ once: false, amount: 0.6 }}>
       <motion.h2
         variants={{
           hidden: { opacity: 0, y: 26, filter: "blur(6px)" },

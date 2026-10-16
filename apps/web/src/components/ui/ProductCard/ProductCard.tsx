@@ -35,7 +35,7 @@ export function ProductCard({
       className={styles.card}
       initial={revealIndex === undefined ? false : { opacity: 0, y: 36 }}
       whileInView={revealIndex === undefined ? undefined : { opacity: 1, y: 0, transition: reveal(revealIndex) }}
-      viewport={{ once: true, amount: 0.15, margin: "0px 0px -6% 0px" }}
+      viewport={{ once: false, amount: 0.15, margin: "0px 0px -6% 0px" }}
       whileHover={reduceMotion ? undefined : { y: -4 }}
       transition={{ duration: 0.22 }}
     >

@@ -163,3 +163,9 @@ The six gold plinths are no longer part of `stage.webp`; each is its own image (
 - New Arrivals: filters start folded on phones (they stay open when you arrive from a search/menu fabric link).
 - Account: recent-order rows no longer overlap; tab bar is tighter.
 - `e2e/responsive.spec.ts` checks all six pages at ten widths (320–1280px) for anything wider than the screen.
+
+## Landing entrance and replaying scroll animations
+
+- **Landing animation:** on page load the stage settles in, then the models rise with their gold stands, centre first and outwards to the edges (`introDelay` and the entrance wrappers in `Hero.tsx`).
+- **Scroll animations replay:** reveals are no longer "once" (`lib/motion/presets.ts` and the components that set their own viewport). A section eases in whenever it scrolls into view and eases out as it leaves, in both directions. The footer, Exclusive Offers cards, social cards, newsletter and the New Arrivals / bag product cards now animate too.
+- Cards that animate with Framer Motion get their hover lift from `whileHover` (a plain CSS transform would be overridden).
