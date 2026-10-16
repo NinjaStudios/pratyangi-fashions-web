@@ -91,16 +91,18 @@ pnpm --filter pratyangi-web exec playwright install chromium   # once per comput
 pnpm test                                                      # builds, then runs everything (about a minute)
 ```
 
-What is checked (30 test runs):
+What is checked (42 test runs):
 
 - **Every page** (`/`, `/new-arrivals`, `/bag`, `/account`, `/account/orders`) has the right title, no broken images, no
   console errors or failed requests, and no sideways scrolling.
 - **Header:** the Shop menu and search dialog open and close with Esc, Tab stays inside the dialog, focus returns to the Search button.
 - **Add to cart** raises the bag count.
 - **Category carousel:** arrows move it, both arrows disable at the ends, and there is no blank space after the last card.
-- **Hero and Shop by Category:** the category cards sit directly under the hero at rest, the hero stays pinned while the
-  category section slides over it and dims slightly, the "Shop by Category" heading appears only while scrolling, nothing
-  is ever blurred, and everything reverses on the way back up (and stays still when "reduce motion" is on).
+- **Hero and Shop by Category:** the category cards sit directly under the hero at rest; the hero stays pinned while the
+  category section slides over it; the centre model fades out and the left and right models drift outward (outer ones
+  further, never crossing); the "Shop by Category" heading has no background, appears only while scrolling and is softly
+  blurred only while it overlaps the hero; everything reverses when scrolling back up, and nothing moves with "reduce
+  motion" on. Also checked: no sideways scrolling at 320, 375 and 425 px.
 
 In plain words:
 

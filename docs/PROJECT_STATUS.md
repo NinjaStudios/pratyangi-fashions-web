@@ -20,7 +20,7 @@ The design source is the Figma prototype plus the supplied PDFs, screenshots and
 
 - Sticky header matched to the original proportions (emblem-only logo, 18px Shop label, 253×46 search pill, solid bag
   and account icons), with Shop menu and a search dialog (keyboard accessible)
-- Hero showcase pinned behind the page while Shop by Category slides over it, with a gentle scroll-linked dim; the "Shop by Category" heading appears only while scrolling (no blur)
+- Hero showcase built in layers (empty stage plus seven separate model cut-outs), pinned behind the page while Shop by Category slides over it. Scroll-linked: the centre model fades out, the side models drift outward (left ones left, right ones right) and slip behind the section, the scene dims slightly, and the heading (no background) fades in with a soft blur only while it overlaps the hero
 - Shop by Category carousel (arrows, swipe, snap, keyboard focus)
 - New Arrivals, Wedding Collection, Festive Collections and Best Sellers rows
 - Loved by our Customers (reviews)
@@ -74,7 +74,8 @@ The design source is the Figma prototype plus the supplied PDFs, screenshots and
 
 ## Known limitations
 
-- The hero is a single composite image, not separate layers; the earlier layer images were removed as unused.
+- The hero stage behind the models was rebuilt from the original artwork wherever a model used to cover it (wall pattern, plinths, central pedestal and carpet). It matches the approved hero to within about 5 out of 255 in colour; there is a tiny three-pixel notch at the top-right edge of the carpet, visible only when the centre model has faded and you zoom in.
+- Hero pictures are at 1x (1440 px artboard): sharp on normal screens, a little soft on 4K and Retina. Exporting the hero at 2x from Figma and re-running the layer export would fix that.
 - Design reference: the Figma design file could not be read directly during development, so layouts were matched from
   Figma frames, the PDFs, screenshots and the screen recording. Re-check against Figma before sign-off.
 - Tested in headless Chrome only. Safari, Firefox and real phones have not been checked.
@@ -110,7 +111,7 @@ The design source is the Figma prototype plus the supplied PDFs, screenshots and
 
 ## How the UI is checked
 
-Automated: `pnpm test` runs 30 Playwright browser tests (15 at desktop size, 15 at phone size) against the production
+Automated: `pnpm test` runs 42 Playwright browser tests (21 at desktop size, 21 at phone size) against the production
 build: page titles, broken images, console errors, horizontal overflow, header menu and search dialog keyboard
 behaviour, add to cart, the category carousel, and the hero/category scroll layering including reduced motion.
 Details and how to watch the tests run are in the README. A deliberate break of the hero pinning was used once to

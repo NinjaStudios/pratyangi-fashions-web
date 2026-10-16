@@ -42,7 +42,8 @@ test("add to cart increases the bag count", async ({ page }) => {
   const bagLink = page.getByRole("link", { name: /Open your bag/ });
   const countOf = async () => Number(((await bagLink.getAttribute("aria-label")) ?? "").match(/(\d+) items?/)?.[1]);
 
-  await expect(bagLink).toHaveAttribute("aria-label", /\d+ items?/);
+  // The bag loads from browser storage after the page appears, so wait for the real starting count (not the empty 0)
+  await expect.poll(countOf).toBeGreaterThan(0);
   const before = await countOf();
 
   // The button is revealed on hover on desktop, so click it directly

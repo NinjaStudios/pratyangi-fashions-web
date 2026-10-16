@@ -65,6 +65,9 @@ export default function HomePage() {
     return heroHeight > 0 ? Math.min(1, Math.max(0, y / heroHeight)) : 0;
   });
   const headingOpacity = useTransform(coverProgress, [0.05, 0.45], [reduceMotion ? 1 : 0, 1]);
+  // A soft blur only while the section overlaps the hero; it is gone before the section settles (never permanent).
+  const headingBlur = useTransform(coverProgress, [0.1, 0.35, 0.8], [0, reduceMotion ? 0 : 2.5, 0]);
+  const headingFilter = useTransform(headingBlur, (value) => (value > 0.05 ? `blur(${value}px)` : "none"));
   const [categoryScroll, setCategoryScroll] = useState({ atStart: true, atEnd: false });
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterMessage, setNewsletterMessage] = useState("");
@@ -122,7 +125,7 @@ export default function HomePage() {
       <Hero coverProgress={coverProgress} />
 
       <section className={styles.categorySection} id="categories" aria-label="Shop by category" ref={categoryRef}>
-          <motion.div className={styles.categoryHeading} style={{ opacity: headingOpacity }}>
+          <motion.div className={styles.categoryHeading} style={{ opacity: headingOpacity, filter: headingFilter }}>
             <h1>Shop by Category</h1>
           </motion.div>
           <div className={styles.categoryBand}>
