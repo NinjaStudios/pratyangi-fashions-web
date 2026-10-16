@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -41,7 +41,42 @@ export function SiteHeader({ bagCount }: SiteHeaderProps) {
 
   const term = query.trim().toLowerCase();
   const results = term ? defaultSearchEntries.filter((entry) => entry.label.toLowerCase().includes(term)) : defaultSearchEntries;
-  const closePanel = () => setPanel(null);
+  const searchButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
+  const closePanel = () => {
+    setPanel(null);
+    searchButtonRef.current?.focus();
+  };
+
+  // Keyboard access: Esc closes the search dialog or Shop menu, and Tab stays inside the open dialog.
+  useEffect(() => {
+    if (!panel && !menuOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        if (panel) {
+          setPanel(null);
+          searchButtonRef.current?.focus();
+        } else {
+          setMenuOpen(false);
+        }
+        return;
+      }
+      if (event.key !== "Tab" || !panel || !dialogRef.current) return;
+      const focusable = dialogRef.current.querySelectorAll<HTMLElement>("a[href], button:not([disabled]), input");
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [panel, menuOpen]);
 
   return (
     <>
@@ -58,7 +93,7 @@ export function SiteHeader({ bagCount }: SiteHeaderProps) {
           </button>
           <Link className={styles.brand} href="/" aria-label="Pratyangi Fashions home">
             <span className={styles.brandLogo}>
-              <Image src="/images/reference/brand-logo.png" alt="" width={61} height={61} priority />
+              <Image src="/images/reference/brand-logo.webp" alt="" width={61} height={61} priority />
             </span>
             <span className={styles.brandText}>
               <span className={styles.brandName}>PRATYANGI FASHIONS</span>
@@ -66,7 +101,7 @@ export function SiteHeader({ bagCount }: SiteHeaderProps) {
             </span>
           </Link>
           <div className={styles.headerActions}>
-            <button className={styles.searchButton} type="button" aria-label="Search catalog" onClick={() => { setPanel("search"); setMenuOpen(false); }}>
+            <button ref={searchButtonRef} className={styles.searchButton} type="button" aria-label="Search catalog" onClick={() => { setPanel("search"); setMenuOpen(false); }}>
               <span>Search</span><Search size={17} />
             </button>
             <Link className={styles.iconButton} href="/bag" aria-label={`Open your bag, ${bagCount} items`}>
@@ -106,6 +141,7 @@ export function SiteHeader({ bagCount }: SiteHeaderProps) {
             onMouseDown={(event) => { if (event.target === event.currentTarget) closePanel(); }}
           >
             <motion.section
+              ref={dialogRef}
               className={styles.dialog}
               role="dialog"
               aria-modal="true"

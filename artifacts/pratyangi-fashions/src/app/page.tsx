@@ -21,12 +21,12 @@ import { getWhatsAppHref, siteConfig, type SocialKey } from "@/lib/siteConfig";
 import styles from "./page.module.css";
 
 const categories = [
-  { name: "Uppada", image: "/images/reference/category-uppada.png", position: "center 18%" },
-  { name: "Banarasi", image: "/images/reference/category-banarasi.png", position: "center 12%" },
-  { name: "Kanchipuram Pattu", image: "/images/reference/category-kanchipuram.png", position: "center 8%" },
-  { name: "Dharmavaram", image: "/images/reference/category-dharmavaram.png", position: "center 15%" },
-  { name: "Soft Silk", image: "/images/reference/category-soft-silk.png", position: "center 10%" },
-  { name: "Bridal Sarees", image: "/images/reference/category-bridal.png", position: "center 12%" },
+  { name: "Uppada", image: "/images/reference/category-uppada.webp", position: "center 18%" },
+  { name: "Banarasi", image: "/images/reference/category-banarasi.webp", position: "center 12%" },
+  { name: "Kanchipuram Pattu", image: "/images/reference/category-kanchipuram.webp", position: "center 8%" },
+  { name: "Dharmavaram", image: "/images/reference/category-dharmavaram.webp", position: "center 15%" },
+  { name: "Soft Silk", image: "/images/reference/category-soft-silk.webp", position: "center 10%" },
+  { name: "Bridal Sarees", image: "/images/reference/category-bridal.webp", position: "center 12%" },
   { name: "Gadwal", image: "/images/figma/categories/gadwal.jpg", position: "center top" },
   { name: "Men's Ethnic Wear", image: "/images/figma/categories/mens-ethnic.jpg", position: "center top" },
   { name: "Jewellery & Accessories", image: "/images/figma/categories/jewellery.jpg", position: "center top" },
@@ -259,7 +259,7 @@ export default function HomePage() {
           </div>
           <div className={styles.portrait}>
             <ParallaxLayer className={styles.portraitLayer} range={3}>
-              <Image src="/images/figma/home/join-background.png" alt="Woman in an embroidered sheer saree, looking over her shoulder" fill sizes="(max-width: 700px) 100vw, 60vw" />
+              <Image src="/images/figma/home/join-background.webp" alt="Woman in an embroidered sheer saree, looking over her shoulder" fill sizes="(max-width: 700px) 100vw, 60vw" />
             </ParallaxLayer>
           </div>
         </ScrollReveal>

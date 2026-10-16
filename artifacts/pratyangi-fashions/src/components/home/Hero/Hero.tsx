@@ -31,7 +31,7 @@ export function Hero({ coverProgress }: HeroProps) {
     >
       <motion.div className={styles.stage} style={{ filter: stageFilter, opacity: stageOpacity }}>
         <Image
-          src="/images/reference/hero-showroom-figma.png"
+          src="/images/reference/hero-showroom-figma.webp"
           alt="Seven models in traditional sarees on a maroon showroom stage with gold plinths and a central white pedestal"
           fill
           priority

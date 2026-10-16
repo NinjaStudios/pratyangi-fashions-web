@@ -101,6 +101,18 @@ New package versions must be at least one day old (`minimumReleaseAge` in `pnpm-
 - **Environment variables:** none are needed to run the UI. `NEXT_PUBLIC_API_URL` is only read by the AI try-on
   feature, which is switched off until the backend phase. Copy secrets into a local `.env*` file — those files are git-ignored.
 
+## Images
+
+Static export serves images exactly as stored (Next's image optimizer is off), so file size is page weight.
+Before adding an image to `artifacts/pratyangi-fashions/public/images`:
+
+- Save it as **WebP**, at most **2× the size it is displayed** (for example, a 250 px wide card needs about 500–640 px).
+- Target **under 150 KB** for a card or product photo; a full-width banner can be larger.
+- Keep PNG only when transparency is needed and WebP is not an option.
+- Reference it by path, e.g. `/images/reference/product-1.webp`.
+
+Example conversion with ffmpeg: `ffmpeg -i in.png -vf "scale=640:-2" -c:v libwebp -quality 82 out.webp`.
+
 ## Deploying the frontend
 
 The build output is plain static files in `artifacts/pratyangi-fashions/out`, so any static host works

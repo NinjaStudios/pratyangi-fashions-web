@@ -24,7 +24,7 @@ export function SiteFooter() {
       <div className={styles.footerMain}>
         <div className={styles.footerBrand}>
           <div className={styles.footerLogo}>
-            <Image src="/images/reference/brand-logo.png" alt="" width={44} height={44} />
+            <Image src="/images/reference/brand-logo.webp" alt="" width={44} height={44} />
             <span className={styles.footerLogoText}>
               <strong>PRATYANGI FASHIONS</strong>
               <small>TRADITION MEETS ELEGANCE</small>

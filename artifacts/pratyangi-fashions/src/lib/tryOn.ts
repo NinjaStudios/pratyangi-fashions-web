@@ -17,9 +17,9 @@ export type TryOnTier = {
 const asset = (name: string) => `/images/figma/try-on/${name}`;
 
 export const tryOnTiers: TryOnTier[] = [
-  { id: "silver", name: "Silver", productId: "saree-1", image: "/images/reference/product-1.jpg", cardImage: asset("card-silver.png"), icon: asset("icon-tick.svg"), detail: "Try all our beautiful silver sarees today.", status: "Available to all" },
-  { id: "platinum", name: "Platinum", productId: "saree-2", image: "/images/reference/product-2.jpg", cardImage: asset("card-platinum.png"), icon: asset("icon-lock.svg"), detail: "Purchase a Silver saree to unlock Platinum Try-On.", status: "Unlocked after a Silver purchase" },
-  { id: "gold", name: "Gold", productId: "saree-3", image: "/images/reference/product-3.jpg", cardImage: asset("card-gold.png"), icon: asset("icon-block.svg"), detail: "Available for direct purchase only.", status: "AI Try-On unavailable" },
+  { id: "silver", name: "Silver", productId: "saree-1", image: "/images/reference/product-1.webp", cardImage: asset("card-silver.webp"), icon: asset("icon-tick.svg"), detail: "Try all our beautiful silver sarees today.", status: "Available to all" },
+  { id: "platinum", name: "Platinum", productId: "saree-2", image: "/images/reference/product-2.webp", cardImage: asset("card-platinum.webp"), icon: asset("icon-lock.svg"), detail: "Purchase a Silver saree to unlock Platinum Try-On.", status: "Unlocked after a Silver purchase" },
+  { id: "gold", name: "Gold", productId: "saree-3", image: "/images/reference/product-3.webp", cardImage: asset("card-gold.webp"), icon: asset("icon-block.svg"), detail: "Available for direct purchase only.", status: "AI Try-On unavailable" },
 ];
 
 export const silverProductIds = tryOnTiers.filter((tier) => tier.id === "silver").map((tier) => tier.productId);

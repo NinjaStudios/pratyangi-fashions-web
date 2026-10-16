@@ -5,11 +5,11 @@ import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import styles from "./SocialFeed.module.css";
 
 const feed = [
-  { title: "Styling Ideas", lines: ["Styling", "Ideas"], platform: "Instagram", icon: "/images/figma/home/social-instagram.svg", image: "/images/reference/hero-model-right1.png" },
-  { title: "Behind The Scenes", lines: ["Behind", "The Scenes"], platform: "YouTube", icon: "/images/figma/home/social-youtube.svg", image: "/images/reference/hero-model-center.png" },
-  { title: "New Collections", lines: ["New", "Collections"], platform: "Facebook", icon: "/images/figma/home/social-facebook.svg", image: "/images/reference/hero-model-left1.png" },
-  { title: "Product Stories", lines: ["Product", "Stories"], platform: "LinkedIn", icon: "/images/figma/home/social-linkedin.svg", image: "/images/reference/hero-model-right1.png" },
-  { title: "Community Updates", lines: ["Community", "Updates"], platform: "X", icon: "/images/figma/home/social-x.svg", image: "/images/reference/hero-model-center.png" },
+  { title: "Styling Ideas", lines: ["Styling", "Ideas"], platform: "Instagram", icon: "/images/figma/home/social-instagram.svg", image: "/images/reference/hero-model-right1.webp" },
+  { title: "Behind The Scenes", lines: ["Behind", "The Scenes"], platform: "YouTube", icon: "/images/figma/home/social-youtube.svg", image: "/images/reference/hero-model-center.webp" },
+  { title: "New Collections", lines: ["New", "Collections"], platform: "Facebook", icon: "/images/figma/home/social-facebook.svg", image: "/images/reference/hero-model-left1.webp" },
+  { title: "Product Stories", lines: ["Product", "Stories"], platform: "LinkedIn", icon: "/images/figma/home/social-linkedin.svg", image: "/images/reference/hero-model-right1.webp" },
+  { title: "Community Updates", lines: ["Community", "Updates"], platform: "X", icon: "/images/figma/home/social-x.svg", image: "/images/reference/hero-model-center.webp" },
 ];
 
 export function SocialFeed() {
