@@ -43,6 +43,8 @@ The design source is the Figma prototype plus the supplied PDFs, screenshots and
 - Search dialog closes on Esc, returns focus, keeps Tab inside; Shop menu closes on Esc
 - Clean workspace: only the 5 runtime packages the app uses, no leftover template code or hosting-vendor files
 - TypeScript check and production build pass; no console errors on any page
+- Deployed to Vercel (2026-10-16): https://pratyangi-fashions-web.vercel.app, redeploys automatically from `main`;
+  checked live at desktop and phone widths (no broken images, no overflow)
 
 ## Not done yet / next
 
@@ -57,7 +59,6 @@ The design source is the Figma prototype plus the supplied PDFs, screenshots and
 | Legal pages (privacy, terms, shipping, GST) | Footer links exist, pages and copy do not |
 | SEO metadata per page, sitemap, analytics | Not started |
 | Automated UI tests (Playwright) | Recommended before launch |
-| Vercel preview deployment | Not set up yet |
 
 ## Decisions
 
@@ -67,6 +68,7 @@ The design source is the Figma prototype plus the supplied PDFs, screenshots and
 | 2026-10-16 | Backend: Node.js + Express, MySQL 8 with `mysql2`, plain SQL upgrade scripts | One language across the project, a friend can help support it, simple to maintain |
 | 2026-10-16 | Production on a Linux VPS, not the shared cPanel account | Shared plan cannot run Express, and holds other unrelated live sites |
 | 2026-10-16 | AI try-on postponed | Frontend work comes first |
+| 2026-10-16 | Frontend hosted on Vercel for now (Root Directory `apps/web`) | Free, automatic deploys from GitHub, preview link per branch; the VPS is only needed once the backend exists |
 | 2026-10-16 | Removed hosting-vendor files, the unused UI kit, the Postgres backend template and 77 unused images | Clean project that installs only what it uses (history is kept in git) |
 
 ## Known limitations
@@ -86,6 +88,11 @@ The design source is the Figma prototype plus the supplied PDFs, screenshots and
   data there.
 - **Credentials:** never paste passwords into chat, issues or commits. Use a password manager, and change any password
   that has been shared.
+- **Vercel account ownership:** the Vercel project currently lives under a personal account (`nstudio706-6425`).
+  Move it to a company team before handover. Also check Vercel's terms: its free Hobby plan is meant for personal,
+  non-commercial use, so a live store will likely need a paid plan.
+- **Preview links are private:** Vercel Deployment Protection is on, so branch preview links ask for a Vercel login.
+  Change this in the project settings if clients need to open previews.
 - **Single maintainer:** keep this file and the README current, and keep every account (GitHub, hosting, domain,
   Vercel) in the company's name with two-step login.
 

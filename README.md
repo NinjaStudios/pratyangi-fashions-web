@@ -19,7 +19,7 @@ The backend design is in [docs/BACKEND_PLAN.md](docs/BACKEND_PLAN.md).
 | UI state / demo data | React hooks + browser `localStorage` | Built |
 | Package manager | pnpm workspace | Built |
 | Source control | Git + GitHub | In use |
-| Preview deployments | Vercel (per-branch preview links) | To set up |
+| Preview deployments | Vercel (production site plus per-branch previews) | Live |
 | Backend | Node.js + Express (TypeScript) | Planned |
 | Database | MySQL 8 + `mysql2`, plain numbered SQL upgrade scripts | Planned |
 | Production hosting | Linux VPS (Nginx + Express under a process manager, MySQL on the same server at first) | Planned |
@@ -98,15 +98,21 @@ Example conversion: `ffmpeg -i in.png -vf "scale=640:-2" -c:v libwebp -quality 8
 
 The build output is plain static files in `apps/web/out`, so any static host works.
 
-**Vercel (for previews and, if wanted, production):**
+**Vercel (set up and working):**
 
-1. Sign in at vercel.com with the GitHub account that can see the repository, choose **Add New → Project** and import it.
-   (An owner of the `NinjaStudios` GitHub organisation may need to approve the Vercel GitHub app.)
-2. Set **Root Directory** to `apps/web` and keep **Include source files outside of the Root Directory** enabled.
-3. Framework preset: **Next.js**. Install command: `pnpm install`. Build command: `pnpm build`. Output is `out`.
-4. Every pushed branch then gets its own preview link; `main` is the production deployment.
+- Project: `pratyangi-fashions-web` (account `nstudio706-6425`), connected to this GitHub repository.
+- Production site: <https://pratyangi-fashions-web.vercel.app> — redeployed automatically on every push to `main`.
+- Every other branch gets its own preview deployment.
+- Project settings that matter: **Framework** Next.js, **Root Directory** `apps/web`, **Include source files outside of
+  the Root Directory** on. Build and install commands are left at Vercel's defaults (pnpm is detected from the lockfile).
+- Preview deployment links (the long `...-nstudio706-6425.vercel.app` addresses) are protected by Vercel login. To show
+  one to a client, turn off Deployment Protection for previews in the project settings, or share a protected link
+  from the Vercel dashboard.
+- Command line (optional): `npm install --global vercel@latest`, then `vercel login`, `vercel whoami`,
+  `vercel ls pratyangi-fashions-web`.
 
-These steps follow Vercel's standard monorepo setup and have **not been tested on this project yet**.
+If a build fails with `The specified Root Directory ... does not exist`, the Root Directory setting does not match the
+folder layout. Set it to `apps/web` under Project Settings → General.
 
 **Nginx on a Linux server (example):** upload the contents of `apps/web/out` and serve them with
 `try_files $uri $uri.html $uri/ =404;`.
