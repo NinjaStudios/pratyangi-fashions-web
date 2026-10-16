@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/pratyangi-fashions",
+  "name": "pratyangi-web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,15 +10,16 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "framer-motion": "catalog:",
-    "lucide-react": "catalog:",
+    "framer-motion": "^12.23.24",
+    "lucide-react": "^0.545.0",
     "next": "^16.4.0",
-    "react": "catalog:",
-    "react-dom": "catalog:"
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:"
+    "@types/node": "^25.3.3",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "~5.9.3"
   }
 }
