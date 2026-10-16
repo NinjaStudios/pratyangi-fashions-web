@@ -5,6 +5,7 @@ const pages = [
   { path: "/", title: "Pratyangi Fashions | Tradition Meets Elegance" },
   { path: "/new-arrivals", title: "New Arrivals | Pratyangi Fashions" },
   { path: "/bag", title: "Your Bag | Pratyangi Fashions" },
+  { path: "/checkout", title: "Checkout | Pratyangi Fashions" },
   { path: "/account", title: "My Account | Pratyangi Fashions" },
   { path: "/account/orders", title: "My Orders | Pratyangi Fashions" },
 ];

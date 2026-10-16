@@ -119,3 +119,25 @@ confirm the tests fail when the behaviour regresses.
 
 Not automated (checked by hand during development): layouts at eight widths from 320 px to 1920 px, page weight and
 layout shift, and before/after screenshot comparison when images changed.
+
+## Smooth scrolling
+
+Mouse-wheel and trackpad scrolling is eased site-wide by Lenis (`apps/web/src/components/layout/SmoothScroll/SmoothScroll.tsx`, mounted in `app/layout.tsx`). It only eases the scroll position, so every scroll-linked animation follows it. Touch scrolling stays native, it is off when the visitor prefers reduced motion, and its frame loop sleeps when the page is idle. Tuning: `lerp` (lower = floatier, higher = snappier). Hero movement uses a soft ease-in-out curve (`soft` in `Hero.tsx`).
+
+## Card reveal and customer marquee
+
+- Home product cards fade up one after another as they scroll into view (`revealIndex` on `ProductCard`; plays once; instant with reduced motion).
+- "Loved by our Customers" is an endless auto-scrolling row (CSS only: two identical groups, track slides by one group's width). Pauses on hover/focus; with reduced motion it becomes a plain swipe row. Speed: `48s` in `.reviewTrack` (page.module.css).
+
+## Shop mega menu and checkout page
+
+- **Shop menu** (`SiteHeader`): Women / Men / Jewellery columns from the Figma nav bar. The hamburger turns into a cross, the label and chevron turn gold, the panel wipes down and its columns fade up one by one. Esc or a click outside closes it. All links go to `/new-arrivals` until category pages exist.
+- **Checkout** (`/checkout`, `apps/web/src/app/checkout/`): delivery address (select / add / delete, sample addresses from Figma), delivery options (Standard / Express), order summary with quantity, remove and coupon (`FIRST20`, `WELCOME10`), price details, "Proceed to Pay". Payment is a demo message only. Shared prices live in `src/lib/checkout.ts`; the bag's "Proceed to Checkout" now links here.
+- **CSS approach:** every stylesheet is now mobile-first: the base rules are the phone layout and `@media (min-width: …)` blocks add the wider layouts. Keep new CSS in that style. (The conversion was checked by comparing screenshots of all six pages at 24 widths from 320px to 1920px before and after; they matched.)
+- **Checkout steps:** Delivery → Payment (UPI / card / net banking / cash on delivery) → Review & Place Order. Standard delivery is always free, as in Figma. Placing the order is a demo message only.
+
+## Section headings and menu hover
+
+- Home-page section titles (New Arrivals, Wedding Collection, Festive Collections, Best Sellers, Loved by our Customers) all use `RevealHeading` (`components/motion/RevealHeading.tsx`): the title rises and sharpens from a soft blur, then "See all" follows. Cards or the reviews row ease in after it.
+- Shop menu: the WOMEN / MEN / JEWELLERY titles draw a gold line in on hover and back out on leave; a hovered link slides a little to the right (10px); links stay lined up with their title otherwise.
+- `e2e/hover-states.spec.ts` covers the hover effects (desktop only).

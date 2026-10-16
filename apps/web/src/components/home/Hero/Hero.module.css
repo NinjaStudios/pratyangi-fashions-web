@@ -1,31 +1,39 @@
+/* Phones: widen the stage so only the three central models show, with the centre model on the central podium. */
 .hero {
-  /* Pinned just below the sticky header; the sections that follow scroll up over it (see .layered in page.module.css). */
   position: sticky;
   top: var(--header-h, 82px);
   z-index: 0;
   width: 100%;
-  aspect-ratio: 1440 / 591;
-  min-height: clamp(220px, 41vw, 591px);
   overflow: hidden;
   background: #f2ede8;
   isolation: isolate;
+  aspect-ratio: 1.3085;
+  min-height: 230px;
 }
 
 /* Dims as the hero is covered (see Hero.tsx). */
 .stage {
   position: absolute;
   inset: 0;
+  top: 0;
+  right: auto;
+  bottom: auto;
+  left: -43%;
+  width: 186%;
+  height: auto;
+  aspect-ratio: 1440 / 591;
 }
 
-/* The 1440 x 591 artboard every layer is positioned in (percentages of it). It always fills the hero height, so wider
-   or narrower heroes crop the sides exactly as a background-size: cover picture would. */
+/*The 1440 x 591 artboard every layer is positioned in (percentages of it). It always fills the hero height, so wider
+   or narrower heroes crop the sides exactly as a background-size: cover picture would.*/
 .scene {
   position: absolute;
   top: 0;
-  left: 50%;
   height: 100%;
   aspect-ratio: 1440 / 591;
-  transform: translateX(-50%);
+  left: 0;
+  width: 100%;
+  transform: none;
 }
 
 .plate,
@@ -38,39 +46,36 @@
   will-change: transform, opacity;
 }
 
-@media (max-width: 900px) {
+@media (min-width: 381px) {
+  .hero {
+    min-height: 0;
+  }
+}
+
+@media (min-width: 561px) {
+  .stage {
+    inset: 0;
+    width: revert;
+    height: revert;
+    aspect-ratio: revert;
+  }
+
+  .scene {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: revert;
+  }
+
   .hero {
     aspect-ratio: 1440 / 620;
     min-height: clamp(200px, 43vw, 520px);
   }
 }
 
-/* Phones: widen the stage so only the three central models show, with the centre model on the central podium. */
-@media (max-width: 560px) {
+@media (min-width: 901px) {
   .hero {
-    aspect-ratio: 1.3085;
-    min-height: 0;
-  }
-
-  .stage {
-    top: 0;
-    right: auto;
-    bottom: auto;
-    left: -43%;
-    width: 186%;
-    height: auto;
     aspect-ratio: 1440 / 591;
-  }
-
-  .scene {
-    left: 0;
-    width: 100%;
-    transform: none;
-  }
-}
-
-@media (max-width: 380px) {
-  .hero {
-    min-height: 230px;
+    min-height: clamp(220px, 41vw, 591px);
   }
 }

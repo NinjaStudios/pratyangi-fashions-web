@@ -52,8 +52,6 @@
 .actionBtn {
   appearance: none;
   border: 0;
-  width: 32px;
-  height: 32px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -61,6 +59,8 @@
   color: var(--ink);
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  width: 36px;
+  height: 36px;
 }
 
 .actionBtn:hover {
@@ -78,8 +78,6 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 32px;
-  padding: 0 14px;
   border: 0;
   border-radius: 6px;
   background: #800020;
@@ -90,6 +88,9 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.2s ease;
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 10px;
 }
 
 .card:hover .addToCart,
@@ -109,47 +110,52 @@
 .meta h3 {
   margin: 0;
   font: 400 16px/normal var(--font-body);
+  font-size: 12px;
 }
 
 .priceRow {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 16px;
   margin: 0;
-  font-size: 16px;
+  font-size: 12px;
+  gap: 2px 8px;
 }
 
 .priceRow del {
   opacity: 0.6;
 }
 
-@media (max-width: 1200px) {
-  .meta h3,
+@media (min-width: 701px) {
+  .actionBtn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .addToCart {
+    min-height: 32px;
+    padding: 0 14px;
+    font: 500 11px var(--font-body);
+  }
+
+  .meta h3 {
+    font: 400 16px/normal var(--font-body);
+    font-size: 14px;
+  }
+
   .priceRow {
+    gap: 4px 16px;
     font-size: 14px;
   }
 }
 
-@media (max-width: 700px) {
+@media (min-width: 1201px) {
   .meta h3 {
-    font-size: 12px;
+    font: 400 16px/normal var(--font-body);
   }
 
   .priceRow {
-    font-size: 12px;
-    gap: 2px 8px;
-  }
-
-  .addToCart {
-    min-height: 36px;
-    padding: 0 12px;
-    font-size: 10px;
-  }
-
-  .actionBtn {
-    width: 36px;
-    height: 36px;
+    font-size: 16px;
   }
 }
 

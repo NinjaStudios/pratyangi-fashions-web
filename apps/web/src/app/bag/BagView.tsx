@@ -9,12 +9,11 @@ import { SiteHeader } from "@/components/layout/SiteHeader/SiteHeader";
 import { WhyPratyangi } from "@/components/sections/WhyPratyangi/WhyPratyangi";
 import { ProductCard } from "@/components/ui/ProductCard/ProductCard";
 import { useBag } from "@/lib/bag";
+import { coupons, freeShippingThreshold } from "@/lib/checkout";
 import { discountPercent, findProduct, formatInr, homeProducts } from "@/lib/catalog";
 import styles from "./bag.module.css";
 
-const freeShippingThreshold = 1999;
 const shippingFee = 99;
-const coupons: Record<string, number> = { FIRST20: 0.2 };
 
 export function BagView() {
   const bag = useBag();
@@ -144,15 +143,17 @@ export function BagView() {
               </dl>
               <hr />
               <div className={styles.total}><span>Total Amount</span><strong>{formatInr(total)}</strong></div>
-              <button
-                type="button"
-                className={styles.checkout}
-                disabled={!items.length}
-                onClick={() => setStatus("Checkout is not available in this local demo — no order or payment was created.")}
-              >
-                Proceed to Checkout
-                <Image src="/images/figma/checkout-arrow.svg" alt="" width={27} height={27} />
-              </button>
+              {items.length ? (
+                <Link className={styles.checkout} href="/checkout">
+                  Proceed to Checkout
+                  <Image src="/images/figma/checkout-arrow.svg" alt="" width={27} height={27} />
+                </Link>
+              ) : (
+                <button type="button" className={styles.checkout} disabled>
+                  Proceed to Checkout
+                  <Image src="/images/figma/checkout-arrow.svg" alt="" width={27} height={27} />
+                </button>
+              )}
               <div className={styles.assurance}>
                 <p className={styles.secure}><Image src="/images/figma/lock-keyhole.svg" alt="" width={18} height={18} />Secure Checkout</p>
                 <p>100% Secure Payments &nbsp; | &nbsp; Easy Returns<br />Order Tracking</p>

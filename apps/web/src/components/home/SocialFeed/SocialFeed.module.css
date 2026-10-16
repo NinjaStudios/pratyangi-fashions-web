@@ -1,9 +1,8 @@
 .section {
-  padding: 64px 5.5% 72px;
-  background:
-    radial-gradient(120% 90% at 20% 0%, rgba(120, 78, 48, .55) 0%, rgba(120, 78, 48, 0) 60%),
+  background: radial-gradient(120% 90% at 20% 0%, rgba(120, 78, 48, .55) 0%, rgba(120, 78, 48, 0) 60%),
     linear-gradient(180deg, #3a271c 0%, #241812 55%, #140d0a 100%);
   color: #f6efe3;
+  padding: 44px 0 52px 16px;
 }
 
 .inner {
@@ -12,11 +11,13 @@
 }
 
 .header {
-  margin-bottom: 40px;
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  gap: 32px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 26px;
+  padding-right: 16px;
 }
 
 .eyebrow {
@@ -45,24 +46,26 @@
   max-width: 480px;
   margin: 0;
   color: #e6d6b8;
-  font-size: 16px;
   line-height: 1.5;
+  font-size: 13px;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding-right: 16px;
+  gap: 14px;
 }
 
 .card {
   position: relative;
-  height: 500px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, .22);
   border-radius: 90px 90px 24px 24px;
   background: #2a1f18;
   isolation: isolate;
+  height: 420px;
+  transition: border-color 250ms ease;
 }
 
 .photo {
@@ -70,12 +73,6 @@
   object-position: center top;
   z-index: -2;
   transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@media (hover: hover) {
-  .card:hover .photo {
-    transform: scale(1.04);
-  }
 }
 
 .card::after {
@@ -96,28 +93,31 @@
   justify-content: flex-end;
   align-items: center;
   text-align: center;
+  padding-bottom: 44px;
 }
 
 .platform {
   width: 46px;
   height: 46px;
-  margin-bottom: 30px;
   display: grid;
   place-items: center;
   border-radius: 50%;
   background: rgba(20, 13, 10, .6);
+  margin-bottom: 18px;
 }
 
 .content h3 {
   margin: 0 0 16px;
   color: #fbf6ea;
   font: 400 24px/1.25 var(--font-body);
+  font-size: 20px;
 }
 
 .soon {
   color: #f1e6d0;
   font: 400 22px/1.1 var(--font-display);
   opacity: .9;
+  font-size: 19px;
 }
 
 .arrow {
@@ -131,60 +131,10 @@
   color: #fbf6ea;
 }
 
-@media (max-width: 1080px) {
-  .grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 760px) {
-  .section {
-    padding: 44px 0 52px 16px;
-  }
-
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
-    margin-bottom: 26px;
-    padding-right: 16px;
-  }
-
-  .aside {
-    font-size: 13px;
-  }
-
-  .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    padding-right: 16px;
-    gap: 14px;
-  }
-
-  .card {
-    height: 420px;
-  }
-
-  .content {
-    padding-bottom: 44px;
-  }
-
-  .platform {
-    margin-bottom: 18px;
-  }
-
-  .content h3 {
-    font-size: 20px;
-  }
-
-  .soon {
-    font-size: 19px;
-  }
-
-  .card:last-child {
-    grid-column: 1 / -1;
-    justify-self: center;
-    width: calc(50% - 7px);
-  }
+.card:last-child {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: calc(50% - 7px);
 }
 
 /* Slightly taller than the card so the image can drift without exposing an edge. */
@@ -199,8 +149,67 @@
   z-index: auto;
 }
 
-.card {
-  transition: border-color 250ms ease;
+@media (min-width: 761px) {
+  .section {
+    padding: 64px 5.5% 72px;
+  }
+
+  .header {
+    margin-bottom: 40px;
+    align-items: flex-end;
+    gap: 32px;
+    flex-direction: revert;
+    padding-right: revert;
+  }
+
+  .aside {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .grid {
+    gap: 18px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-right: revert;
+  }
+
+  .card {
+    height: 500px;
+  }
+
+  .content {
+    padding: 0 16px 62px;
+  }
+
+  .platform {
+    margin-bottom: 30px;
+  }
+
+  .content h3 {
+    font: 400 24px/1.25 var(--font-body);
+  }
+
+  .soon {
+    font: 400 22px/1.1 var(--font-display);
+  }
+
+  .card:last-child {
+    grid-column: revert;
+    justify-self: revert;
+    width: revert;
+  }
+}
+
+@media (min-width: 1081px) {
+  .grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (hover: hover) {
+  .card:hover .photo {
+    transform: scale(1.04);
+  }
 }
 
 @media (hover: hover) {

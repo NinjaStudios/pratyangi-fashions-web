@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { Eye, Heart } from "lucide-react";
+import { easeOutExpo } from "@/lib/motion/presets";
 import { formatRs } from "@/lib/catalog";
 import styles from "./ProductCard.module.css";
 
@@ -13,6 +14,8 @@ export type ProductCardProps = {
   priceInr: number;
   compareAtInr?: number;
   onAddToCart?: (id: string) => void;
+  /** Position in its row; when set, the card fades up as it scrolls into view, one after another. */
+  revealIndex?: number;
 };
 
 export function ProductCard({
@@ -22,12 +25,17 @@ export function ProductCard({
   priceInr,
   compareAtInr = 30000,
   onAddToCart,
+  revealIndex,
 }: ProductCardProps) {
   const reduceMotion = useReducedMotion();
+  const reveal = (index: number) => (reduceMotion ? { duration: 0 } : { duration: 0.7, ease: easeOutExpo, delay: (index % 4) * 0.09 });
 
   return (
     <motion.article
       className={styles.card}
+      initial={revealIndex === undefined ? false : { opacity: 0, y: 36 }}
+      whileInView={revealIndex === undefined ? undefined : { opacity: 1, y: 0, transition: reveal(revealIndex) }}
+      viewport={{ once: true, amount: 0.15, margin: "0px 0px -6% 0px" }}
       whileHover={reduceMotion ? undefined : { y: -4 }}
       transition={{ duration: 0.22 }}
     >
