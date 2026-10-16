@@ -163,3 +163,14 @@ Settings → General and set **Root Directory** to `apps/web`.
 | See what visitors will get | `pnpm build` then `pnpm preview` |
 | Save and share my work | `git add -A`, `git commit -m "..."`, `git push -u origin <branch>` |
 | Get the newest version | `git checkout main` then `git pull` then `pnpm install` |
+
+## If the tests fail on your computer but nothing was changed
+
+The browser tests need a quiet machine. If many tests time out (each taking about 50 seconds), close extra browsers and the `pnpm dev` window, then run fewer at a time:
+
+```
+cd apps/web
+npx playwright test --workers=2
+```
+
+On GitHub the tests run automatically for every pull request (`.github/workflows/test.yml`).
