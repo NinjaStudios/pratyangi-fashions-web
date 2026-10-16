@@ -17,7 +17,7 @@ test.describe("Shop menu", () => {
     await expect(menu.getByRole("link", { name: "Accessories" })).toBeVisible();
 
     // clicking outside closes it again
-    await page.mouse.click(5, 600);
+    await page.mouse.click(5, (page.viewportSize()?.height ?? 800) - 5);
     await expect(menu).toBeHidden();
     await expect(bars).toHaveAttribute("data-open", "false");
   });
@@ -83,7 +83,8 @@ test.describe("checkout", () => {
     await expect(page.getByRole("heading", { name: "Payment Method" })).toBeVisible();
     await expect(page.getByRole("listitem").filter({ hasText: "Payment" }).first()).toHaveAttribute("aria-current", "step");
 
-    await page.getByRole("radio", { name: /Cash on delivery/ }).check({ force: true });
+    await page.getByText("Cash on delivery", { exact: true }).click();
+    await expect(page.getByRole("radio", { name: /Cash on delivery/ })).toBeChecked();
     await page.getByRole("button", { name: /Review Order/ }).click();
     await expect(page.getByRole("heading", { name: /Review & Place Order/ , level: 2 })).toBeVisible();
     await expect(page.getByText("Cash on delivery").first()).toBeVisible();
