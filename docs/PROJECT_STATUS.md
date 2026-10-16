@@ -135,3 +135,9 @@ Mouse-wheel and trackpad scrolling is eased site-wide by Lenis (`apps/web/src/co
 - **Checkout** (`/checkout`, `apps/web/src/app/checkout/`): delivery address (select / add / delete, sample addresses from Figma), delivery options (Standard / Express), order summary with quantity, remove and coupon (`FIRST20`, `WELCOME10`), price details, "Proceed to Pay". Payment is a demo message only. Shared prices live in `src/lib/checkout.ts`; the bag's "Proceed to Checkout" now links here.
 - **CSS approach:** every stylesheet is now mobile-first: the base rules are the phone layout and `@media (min-width: …)` blocks add the wider layouts. Keep new CSS in that style. (The conversion was checked by comparing screenshots of all six pages at 24 widths from 320px to 1920px before and after; they matched.)
 - **Checkout steps:** Delivery → Payment (UPI / card / net banking / cash on delivery) → Review & Place Order. Standard delivery is always free, as in Figma. Placing the order is a demo message only.
+
+## Section headings and menu hover
+
+- Home-page section titles (New Arrivals, Wedding Collection, Festive Collections, Best Sellers, Loved by our Customers) all use `RevealHeading` (`components/motion/RevealHeading.tsx`): the title rises and sharpens from a soft blur, then "See all" follows. Cards or the reviews row ease in after it.
+- Shop menu: the WOMEN / MEN / JEWELLERY titles draw a gold line in on hover and back out on leave; links are indented further from their title.
+- `e2e/hover-states.spec.ts` covers the hover effects (desktop only).

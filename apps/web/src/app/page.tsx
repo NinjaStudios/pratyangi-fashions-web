@@ -9,6 +9,8 @@ import { Hero } from "@/components/home/Hero/Hero";
 import { SocialFeed } from "@/components/home/SocialFeed/SocialFeed";
 import { TryOnSection } from "@/components/home/TryOnSection/TryOnSection";
 import { ParallaxLayer } from "@/components/motion/ParallaxLayer";
+import { easeOutExpo } from "@/lib/motion/presets";
+import { RevealHeading } from "@/components/motion/RevealHeading";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { SiteFooter } from "@/components/layout/SiteFooter/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader/SiteHeader";
@@ -151,12 +153,9 @@ export default function HomePage() {
       </section>
 
       <section className={styles.arrivalsSection} id="arrivals">
-        {collectionRows.map((row, rowIndex) => (
-          <ScrollReveal key={row.title} delay={rowIndex * 0.06} className={styles.collectionRow} id={row.id}>
-            <div className={styles.sectionHeading}>
-              <h2>{row.title}</h2>
-              <a href="#arrivals" className={styles.seeAll}>See all <ChevronRight size={14} /></a>
-            </div>
+        {collectionRows.map((row) => (
+          <div key={row.title} className={styles.collectionRow} id={row.id}>
+            <RevealHeading title={row.title} href="#arrivals" className={styles.sectionHeading} seeAllClassName={styles.seeAll} />
             <div className={styles.productGrid}>
               {homeProducts.map((product, productIndex) => (
                 <ProductCard
@@ -171,18 +170,20 @@ export default function HomePage() {
                 />
               ))}
             </div>
-          </ScrollReveal>
+          </div>
         ))}
       </section>
       </div>
 
-      <ScrollReveal>
-        <section className={styles.reviewsSection} id="reviews">
-          <div className={styles.sectionHeading}>
-            <h2>Loved by our Customers</h2>
-            <a href="#reviews" className={styles.seeAll}>See all <ChevronRight size={14} /></a>
-          </div>
-          <div className={styles.reviewViewport}>
+      <section className={styles.reviewsSection} id="reviews">
+          <RevealHeading title="Loved by our Customers" href="#reviews" className={styles.sectionHeading} seeAllClassName={styles.seeAll} />
+          <motion.div
+            className={styles.reviewViewport}
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={reduceMotion ? { duration: 0 } : { duration: 0.8, ease: easeOutExpo, delay: 0.2 }}
+          >
             <div className={styles.reviewTrack}>
               {[0, 1].map((copy) => (
                 <div className={styles.reviewGroup} key={copy} aria-hidden={copy === 1 ? true : undefined}>
@@ -197,9 +198,8 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         </section>
-      </ScrollReveal>
 
       <TryOnSection bag={bag.lines.map((line) => line.id)} onAddToBag={bag.add} />
 
