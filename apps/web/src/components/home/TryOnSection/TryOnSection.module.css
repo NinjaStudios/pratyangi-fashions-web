@@ -1,6 +1,6 @@
 .section {
-  padding: 64px 5.5% 72px;
   background: #e7e4d9;
+  padding: 44px 16px 52px;
 }
 
 .heading {
@@ -13,14 +13,14 @@
 .panel {
   max-width: 1280px;
   margin: 0 auto;
-  padding: clamp(28px, 4vw, 52px);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr) minmax(0, .9fr);
   gap: clamp(24px, 3vw, 44px);
   align-items: center;
   background: #fdf6e2;
   border: 1px solid #e2cd8f;
   border-radius: 6px;
+  grid-template-columns: 1fr;
+  padding: 22px 16px;
 }
 
 .intro .eyebrow {
@@ -53,7 +53,21 @@
   line-height: 1.6;
 }
 
-.primary,
+.primary {
+  min-height: 46px;
+  padding: 0 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 2px;
+  font-size: 14px;
+  cursor: pointer;
+  border: 0;
+  background: var(--wine);
+  color: #fff;
+}
+
 .secondary {
   min-height: 46px;
   padding: 0 26px;
@@ -64,12 +78,9 @@
   border-radius: 2px;
   font-size: 14px;
   cursor: pointer;
-}
-
-.primary {
-  border: 0;
-  background: var(--wine);
-  color: #fff;
+  background: transparent;
+  border: 1px solid var(--wine);
+  color: var(--wine);
 }
 
 .primary:disabled {
@@ -79,12 +90,6 @@
 
 .primary img {
   filter: brightness(0) invert(1);
-}
-
-.secondary {
-  background: transparent;
-  border: 1px solid var(--wine);
-  color: var(--wine);
 }
 
 .features {
@@ -214,17 +219,18 @@
   max-width: 1280px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
+  grid-template-columns: 1fr;
+  gap: 14px;
 }
 
 .card {
   position: relative;
-  min-height: 232px;
   overflow: hidden;
   border: 1px solid;
   border-radius: 6px;
   isolation: isolate;
+  min-height: 240px;
+  transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 250ms ease;
 }
 
 .card::after {
@@ -248,18 +254,30 @@
 
 .cardBody {
   height: 100%;
-  padding: 22px 24px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  max-width: 70%;
+  padding: 22px 18px;
 }
 
 .cardText p {
   max-width: 230px;
+  margin: 0;
+  color: #4a3d33;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .badge {
   white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .85);
+  color: #3a2d26;
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 
 .cardHead {
@@ -308,23 +326,6 @@
   margin: 0;
   color: #241a16;
   font: 400 26px/1.2 var(--font-display);
-}
-
-.badge {
-  padding: 4px 10px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, .85);
-  color: #3a2d26;
-  font-size: 10px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-
-.cardText p {
-  margin: 0;
-  color: #4a3d33;
-  font-size: 14px;
-  line-height: 1.5;
 }
 
 .tierButton {
@@ -395,10 +396,10 @@
 .growth {
   max-width: 1280px;
   margin: 0 auto;
-  padding: clamp(24px, 3vw, 40px);
   background: #fdf6e2;
   border: 1px solid #e2cd8f;
   border-radius: 6px;
+  padding: 22px 16px;
 }
 
 .growth ol {
@@ -406,8 +407,9 @@
   padding: 0;
   list-style: none;
   display: flex;
-  align-items: center;
-  gap: 14px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
 }
 
 .growth li {
@@ -445,6 +447,7 @@
 .growthArrow {
   flex: 0 0 auto;
   transform: rotate(90deg);
+  display: none;
 }
 
 .growthHeading {
@@ -537,57 +540,57 @@
   gap: 12px;
 }
 
-@media (max-width: 1080px) {
+.how {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 761px) {
+  .section {
+    padding: 64px 5.5% 72px;
+  }
+
   .panel {
+    padding: clamp(28px, 4vw, 52px);
     grid-template-columns: 1fr 1fr;
   }
 
-  .how {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 760px) {
-  .section {
-    padding: 44px 16px 52px;
-  }
-
-  .panel {
-    grid-template-columns: 1fr;
-    padding: 22px 16px;
-  }
-
   .cards {
-    grid-template-columns: 1fr;
-    gap: 14px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
   }
 
   .card {
-    min-height: 240px;
+    min-height: 232px;
   }
 
   .cardBody {
-    max-width: 70%;
-    padding: 22px 18px;
+    padding: 22px 24px;
+    max-width: revert;
   }
 
   .growth {
-    padding: 22px 16px;
+    padding: clamp(24px, 3vw, 40px);
   }
 
   .growth ol {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
+    align-items: center;
+    gap: 14px;
+    flex-direction: revert;
   }
 
   .growthArrow {
-    display: none;
+    display: revert;
   }
 }
 
-.card {
-  transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 250ms ease;
+@media (min-width: 1081px) {
+  .panel {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr) minmax(0, .9fr);
+  }
+
+  .how {
+    grid-column: revert;
+  }
 }
 
 @media (hover: hover) {

@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import Image from "next/image";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform, cubicBezier } from "framer-motion";
 import { ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
 import { Hero } from "@/components/home/Hero/Hero";
 import { SocialFeed } from "@/components/home/SocialFeed/SocialFeed";
 import { TryOnSection } from "@/components/home/TryOnSection/TryOnSection";
 import { ParallaxLayer } from "@/components/motion/ParallaxLayer";
+import { easeOutExpo } from "@/lib/motion/presets";
+import { RevealHeading } from "@/components/motion/RevealHeading";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { SiteFooter } from "@/components/layout/SiteFooter/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader/SiteHeader";
@@ -57,15 +59,17 @@ export default function HomePage() {
   const categoryRef = useRef<HTMLElement>(null);
   // The hero is pinned, so the category section covers it by exactly the distance scrolled. Progress is that
   // distance over the hero's height (the category's offsetTop inside the layered wrapper): 0 at the top of the page,
-  // 1 once the hero is fully covered. It drives the hero's recede and the heading's soft focus.
+  // 1 once the hero is fully covered. It dims the hero as it recedes and fades in the "Shop by Category" strip:
+  // the heading is not shown at rest and appears only as the page is scrolled (no blur anywhere).
   const { scrollY } = useScroll();
   const coverProgress = useTransform(scrollY, (y) => {
     const heroHeight = categoryRef.current?.offsetTop ?? 0;
     return heroHeight > 0 ? Math.min(1, Math.max(0, y / heroHeight)) : 0;
   });
-  const headingBlur = useTransform(coverProgress, [0.25, 0.5, 0.8], [0, reduceMotion ? 0 : 2.5, 0]);
+  const headingOpacity = useTransform(coverProgress, [0.05, 0.45], [reduceMotion ? 1 : 0, 1], { ease: cubicBezier(0.25, 0.1, 0.25, 1) });
+  // A soft blur only while the section overlaps the hero; it is gone before the section settles (never permanent).
+  const headingBlur = useTransform(coverProgress, [0.1, 0.35, 0.8], [0, reduceMotion ? 0 : 2.5, 0]);
   const headingFilter = useTransform(headingBlur, (value) => (value > 0.05 ? `blur(${value}px)` : "none"));
-  const headingOpacity = useTransform(coverProgress, [0.25, 0.5, 0.8], [1, reduceMotion ? 1 : 0.7, 1]);
   const [categoryScroll, setCategoryScroll] = useState({ atStart: true, atEnd: false });
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterMessage, setNewsletterMessage] = useState("");
@@ -123,7 +127,7 @@ export default function HomePage() {
       <Hero coverProgress={coverProgress} />
 
       <section className={styles.categorySection} id="categories" aria-label="Shop by category" ref={categoryRef}>
-          <motion.div className={styles.categoryHeading} style={{ filter: headingFilter, opacity: headingOpacity }}>
+          <motion.div className={styles.categoryHeading} style={{ opacity: headingOpacity, filter: headingFilter }}>
             <h1>Shop by Category</h1>
           </motion.div>
           <div className={styles.categoryBand}>
@@ -149,16 +153,14 @@ export default function HomePage() {
       </section>
 
       <section className={styles.arrivalsSection} id="arrivals">
-        {collectionRows.map((row, rowIndex) => (
-          <ScrollReveal key={row.title} delay={rowIndex * 0.06} className={styles.collectionRow} id={row.id}>
-            <div className={styles.sectionHeading}>
-              <h2>{row.title}</h2>
-              <a href="#arrivals" className={styles.seeAll}>See all <ChevronRight size={14} /></a>
-            </div>
+        {collectionRows.map((row) => (
+          <div key={row.title} className={styles.collectionRow} id={row.id}>
+            <RevealHeading title={row.title} href="#arrivals" className={styles.sectionHeading} seeAllClassName={styles.seeAll} />
             <div className={styles.productGrid}>
-              {homeProducts.map((product) => (
+              {homeProducts.map((product, productIndex) => (
                 <ProductCard
                   key={`${row.title}-${product.id}`}
+                  revealIndex={productIndex}
                   id={product.id}
                   title={product.name}
                   imageSrc={product.image}
@@ -168,29 +170,36 @@ export default function HomePage() {
                 />
               ))}
             </div>
-          </ScrollReveal>
+          </div>
         ))}
       </section>
       </div>
 
-      <ScrollReveal>
-        <section className={styles.reviewsSection} id="reviews">
-          <div className={styles.sectionHeading}>
-            <h2>Loved by our Customers</h2>
-            <a href="#reviews" className={styles.seeAll}>See all <ChevronRight size={14} /></a>
-          </div>
-          <div className={styles.reviewGrid}>
-            {[0, 1, 2, 3].map((item) => (
-              <article className={styles.reviewCard} key={item}>
-                <div className={styles.reviewImage}><Image src="/images/figma/home/review-pattern.jpg" alt="" fill sizes="(max-width: 700px) 74vw, 20vw" /></div>
-                <div className={styles.stars} role="img" aria-label="5 out of 5 stars"><Image src="/images/figma/home/review-stars.svg" alt="" width={176} height={32} /></div>
-                <p className={styles.reviewBrand}>TRADITION MEETS ELEGANCE</p>
-                <p className={styles.reviewCopy}>{reviewText}</p>
-              </article>
-            ))}
-          </div>
+      <section className={styles.reviewsSection} id="reviews">
+          <RevealHeading title="Loved by our Customers" href="#reviews" className={styles.sectionHeading} seeAllClassName={styles.seeAll} />
+          <motion.div
+            className={styles.reviewViewport}
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={reduceMotion ? { duration: 0 } : { duration: 0.8, ease: easeOutExpo, delay: 0.2 }}
+          >
+            <div className={styles.reviewTrack}>
+              {[0, 1].map((copy) => (
+                <div className={styles.reviewGroup} key={copy} aria-hidden={copy === 1 ? true : undefined}>
+                  {[0, 1, 2, 3, 4, 5].map((item) => (
+                    <article className={styles.reviewCard} key={item}>
+                      <div className={styles.reviewImage}><Image src="/images/figma/home/review-pattern.jpg" alt="" fill sizes="(max-width: 700px) 74vw, 300px" /></div>
+                      <div className={styles.stars} role="img" aria-label="5 out of 5 stars"><Image src="/images/figma/home/review-stars.svg" alt="" width={176} height={32} /></div>
+                      <p className={styles.reviewBrand}>TRADITION MEETS ELEGANCE</p>
+                      <p className={styles.reviewCopy}>{reviewText}</p>
+                    </article>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </section>
-      </ScrollReveal>
 
       <TryOnSection bag={bag.lines.map((line) => line.id)} onAddToBag={bag.add} />
 
