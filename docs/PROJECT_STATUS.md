@@ -139,5 +139,5 @@ Mouse-wheel and trackpad scrolling is eased site-wide by Lenis (`apps/web/src/co
 ## Section headings and menu hover
 
 - Home-page section titles (New Arrivals, Wedding Collection, Festive Collections, Best Sellers, Loved by our Customers) all use `RevealHeading` (`components/motion/RevealHeading.tsx`): the title rises and sharpens from a soft blur, then "See all" follows. Cards or the reviews row ease in after it.
-- Shop menu: the WOMEN / MEN / JEWELLERY titles draw a gold line in on hover and back out on leave; links are indented further from their title.
+- Shop menu: the WOMEN / MEN / JEWELLERY titles draw a gold line in on hover and back out on leave; a hovered link slides a little to the right (10px); links stay lined up with their title otherwise.
 - `e2e/hover-states.spec.ts` covers the hover effects (desktop only).

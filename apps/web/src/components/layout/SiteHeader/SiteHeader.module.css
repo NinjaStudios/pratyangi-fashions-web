@@ -371,7 +371,7 @@
 .menuGroup a:hover,
 .menuGroup a:focus-visible {
   color: var(--burgundy);
-  transform: translateX(4px);
+  transform: translateX(10px);
 }
 
 @media (min-width: 481px) {
@@ -589,15 +589,4 @@
 .menuGroup h2:hover::after {
   transform: scaleX(1);
   transform-origin: left;
-}
-
-/* Links sit a little further in from their title. */
-.menuGroup ul {
-  padding-left: 14px;
-}
-
-@media (min-width: 701px) {
-  .menuGroup ul {
-    padding-left: 22px;
-  }
 }
