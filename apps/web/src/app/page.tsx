@@ -158,9 +158,10 @@ export default function HomePage() {
               <a href="#arrivals" className={styles.seeAll}>See all <ChevronRight size={14} /></a>
             </div>
             <div className={styles.productGrid}>
-              {homeProducts.map((product) => (
+              {homeProducts.map((product, productIndex) => (
                 <ProductCard
                   key={`${row.title}-${product.id}`}
+                  revealIndex={productIndex}
                   id={product.id}
                   title={product.name}
                   imageSrc={product.image}
@@ -181,15 +182,21 @@ export default function HomePage() {
             <h2>Loved by our Customers</h2>
             <a href="#reviews" className={styles.seeAll}>See all <ChevronRight size={14} /></a>
           </div>
-          <div className={styles.reviewGrid}>
-            {[0, 1, 2, 3].map((item) => (
-              <article className={styles.reviewCard} key={item}>
-                <div className={styles.reviewImage}><Image src="/images/figma/home/review-pattern.jpg" alt="" fill sizes="(max-width: 700px) 74vw, 20vw" /></div>
-                <div className={styles.stars} role="img" aria-label="5 out of 5 stars"><Image src="/images/figma/home/review-stars.svg" alt="" width={176} height={32} /></div>
-                <p className={styles.reviewBrand}>TRADITION MEETS ELEGANCE</p>
-                <p className={styles.reviewCopy}>{reviewText}</p>
-              </article>
-            ))}
+          <div className={styles.reviewViewport}>
+            <div className={styles.reviewTrack}>
+              {[0, 1].map((copy) => (
+                <div className={styles.reviewGroup} key={copy} aria-hidden={copy === 1 ? true : undefined}>
+                  {[0, 1, 2, 3, 4, 5].map((item) => (
+                    <article className={styles.reviewCard} key={item}>
+                      <div className={styles.reviewImage}><Image src="/images/figma/home/review-pattern.jpg" alt="" fill sizes="(max-width: 700px) 74vw, 300px" /></div>
+                      <div className={styles.stars} role="img" aria-label="5 out of 5 stars"><Image src="/images/figma/home/review-stars.svg" alt="" width={176} height={32} /></div>
+                      <p className={styles.reviewBrand}>TRADITION MEETS ELEGANCE</p>
+                      <p className={styles.reviewCopy}>{reviewText}</p>
+                    </article>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       </ScrollReveal>

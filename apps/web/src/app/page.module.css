@@ -304,12 +304,79 @@
   padding-top: 4px;
 }
 
-.reviewGrid {
+
+/* Loved by our Customers: an endless, slow marquee. The track holds two identical groups and slides left by exactly one
+   group's width, so the loop is seamless. It pauses on hover/focus; with reduced motion it becomes a normal swipe row. */
+.reviewViewport {
   max-width: 1280px;
   margin: auto;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow: hidden;
+  padding: 6px 0 16px;
+  position: relative;
+}
+
+/* Soft edges: gradients in the section colour (cheaper than masking a moving layer). */
+.reviewViewport::before,
+.reviewViewport::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 5%;
+  pointer-events: none;
+}
+
+.reviewViewport::before {
+  left: 0;
+  background: linear-gradient(90deg, #e9e8d9, transparent);
+}
+
+.reviewViewport::after {
+  right: 0;
+  background: linear-gradient(270deg, #e9e8d9, transparent);
+}
+
+.reviewTrack {
+  display: flex;
+  width: max-content;
+  animation: reviewMarquee 48s linear infinite;
+  will-change: transform;
+}
+
+.reviewGroup {
+  display: flex;
   gap: 18px;
+  padding-right: 18px;
+}
+
+.reviewGroup .reviewCard {
+  flex: 0 0 min(300px, 74vw);
+}
+
+@keyframes reviewMarquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.reviewViewport:hover .reviewTrack,
+.reviewViewport:focus-within .reviewTrack {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reviewViewport {
+    overflow-x: auto;
+  }
+
+  .reviewTrack {
+    animation: none !important;
+  }
+
+  .reviewGroup[aria-hidden="true"] {
+    display: none;
+  }
 }
 
 .reviewCard {
@@ -1074,9 +1141,6 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .reviewGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 
   .tierGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1117,12 +1181,8 @@
     padding-right: 4%;
   }
 
-  .productGrid,
-  .reviewGrid {
-    gap: 12px;
-  }
-
   .productGrid {
+    gap: 12px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1226,9 +1286,6 @@
     padding-top: 6px;
   }
 
-  .reviewGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 
   .reviewCard {
     padding: 14px;
@@ -1553,10 +1610,6 @@
 }
 
 @media (max-width: 480px) {
-  .reviewGrid {
-    grid-template-columns: minmax(0, 1fr);
-    max-width: 340px;
-  }
 
   .reviewCard {
     padding: 20px 24px;
