@@ -1,15 +1,14 @@
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
 import { ParallaxLayer } from "@/components/motion/ParallaxLayer";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import styles from "./SocialFeed.module.css";
 
 const feed = [
-  { title: "Styling Ideas", lines: ["Styling", "Ideas"], platform: "Instagram", icon: "/images/figma/home/social-instagram.svg", image: "/images/reference/hero-model-right1.webp" },
-  { title: "Behind The Scenes", lines: ["Behind", "The Scenes"], platform: "YouTube", icon: "/images/figma/home/social-youtube.svg", image: "/images/reference/hero-model-center.webp" },
-  { title: "New Collections", lines: ["New", "Collections"], platform: "Facebook", icon: "/images/figma/home/social-facebook.svg", image: "/images/reference/hero-model-left1.webp" },
-  { title: "Product Stories", lines: ["Product", "Stories"], platform: "LinkedIn", icon: "/images/figma/home/social-linkedin.svg", image: "/images/reference/hero-model-right1.webp" },
-  { title: "Community Updates", lines: ["Community", "Updates"], platform: "X", icon: "/images/figma/home/social-x.svg", image: "/images/reference/hero-model-center.webp" },
+  { title: "Styling Ideas", lines: ["Styling", "Ideas"], platform: "Instagram", icon: "/images/figma/home/social-instagram.svg", iconSize: [24, 24], image: "/images/reference/hero-model-right1.webp" },
+  { title: "Behind The Scenes", lines: ["Behind", "The Scenes"], platform: "YouTube", icon: "/images/figma/home/social-youtube.svg", iconSize: [24, 16], image: "/images/reference/hero-model-center.webp" },
+  { title: "New Collections", lines: ["New", "Collections"], platform: "Facebook", icon: "/images/figma/home/social-facebook.svg", iconSize: [12, 24], image: "/images/reference/hero-model-left1.webp" },
+  { title: "Product Stories", lines: ["Product", "Stories"], platform: "LinkedIn", icon: "/images/figma/home/social-linkedin.svg", iconSize: [24, 24], image: "/images/reference/hero-model-right1.webp" },
+  { title: "Community Updates", lines: ["Community", "Updates"], platform: "X", icon: "/images/figma/home/social-x.svg", iconSize: [24, 24], image: "/images/reference/hero-model-center.webp" },
 ];
 
 export function SocialFeed() {
@@ -31,12 +30,12 @@ export function SocialFeed() {
               </ParallaxLayer>
               <div className={styles.content}>
                 <span className={styles.platform} aria-hidden="true">
-                  <Image src={item.icon} alt="" width={22} height={22} />
+                  <Image src={item.icon} alt="" width={item.iconSize[0]} height={item.iconSize[1]} />
                 </span>
                 <h3>{item.lines[0]}<br />{item.lines[1]}</h3>
                 <span className={styles.soon}>Coming Soon</span>
                 <span className={styles.arrow} aria-label={`${item.platform} ${item.title}: coming soon`}>
-                  <ArrowRight size={20} strokeWidth={1.6} aria-hidden="true" />
+                  <Image src="/images/figma/home/social-arrow.svg" alt="" width={32} height={32} aria-hidden="true" />
                 </span>
               </div>
             </article>

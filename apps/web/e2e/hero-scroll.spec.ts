@@ -189,19 +189,23 @@ test.describe("hero and Shop by Category layering", () => {
 
 test("each side model carries its gold stand away with it", async ({ page }) => {
   await page.goto("/");
-  const stand = (id: string) => page.locator(`[data-hero-model="${id}"] [class*=plinth]`);
-  const left = async (locator: ReturnType<typeof stand>) => (await locator.boundingBox())!.x;
   const hero = (await heroBox(page))!;
+  // model and stand are read in the same instant, so scrolling that is still settling cannot skew the comparison
+  const readBoth = (id: string) =>
+    page.evaluate((modelId) => {
+      const model = document.querySelector(`[data-hero-model="${modelId}"]`)!;
+      const stand = model.querySelector("[class*=plinth]")!;
+      return { model: model.getBoundingClientRect().left, stand: stand.getBoundingClientRect().left };
+    }, id);
 
   for (const id of [...LEFT, ...RIGHT]) {
     await scrollToY(page, 0);
-    const standAtRest = await left(stand(id));
-    const modelAtRest = await modelBox(page, id);
+    await expect.poll(() => modelX(page, id)).toBe(0); // back at rest before measuring
+    const rest = await readBoth(id);
     await scrollToY(page, hero.height * 0.8);
-    await expect.poll(async () => Math.abs((await left(stand(id))) - standAtRest)).toBeGreaterThan(40);
-    const standMoved = (await left(stand(id))) - standAtRest;
-    const modelMoved = (await modelBox(page, id)).left - modelAtRest.left;
-    expect(Math.abs(standMoved - modelMoved), `${id}: stand and model move together`).toBeLessThan(1);
-    expect(Math.sign(standMoved)).toBe(LEFT.includes(id) ? -1 : 1);
+    await expect.poll(async () => Math.abs((await readBoth(id)).stand - rest.stand)).toBeGreaterThan(40);
+    const now = await readBoth(id);
+    expect(Math.abs(now.stand - rest.stand - (now.model - rest.model)), `${id}: stand and model move together`).toBeLessThan(1);
+    expect(Math.sign(now.stand - rest.stand)).toBe(LEFT.includes(id) ? -1 : 1);
   }
 });

@@ -9,7 +9,7 @@ import { Hero } from "@/components/home/Hero/Hero";
 import { SocialFeed } from "@/components/home/SocialFeed/SocialFeed";
 import { TryOnSection } from "@/components/home/TryOnSection/TryOnSection";
 import { ParallaxLayer } from "@/components/motion/ParallaxLayer";
-import { easeOutExpo } from "@/lib/motion/presets";
+import { easeOutExpo, fadeIn, fadeUp } from "@/lib/motion/presets";
 import { RevealHeading } from "@/components/motion/RevealHeading";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { SiteFooter } from "@/components/layout/SiteFooter/SiteFooter";
@@ -221,12 +221,12 @@ export default function HomePage() {
           {offerMessage && <p className={styles.offerMessage} role="status">{offerMessage}</p>}
         </ScrollReveal>
 
-        <ScrollReveal className={styles.socialStory} id="join">
+        <div className={styles.socialStory} id="join">
           <div className={styles.socialCopy}>
-            <span className={styles.eyebrow}>JOIN OUR WORLD <span aria-hidden="true" /></span>
-            <h2>Where Tradition Meets <em>Tomorrow</em></h2>
-            <p>Follow us for new collections, styling inspiration, behind-the-scenes moments, product videos and exclusive updates.</p>
-            <div className={styles.socialLinks} aria-label="Social platforms">
+            <motion.span className={styles.eyebrow} {...fadeUp(reduceMotion, 0)}>JOIN OUR WORLD <span aria-hidden="true" /></motion.span>
+            <motion.h2 {...fadeUp(reduceMotion, 0.08)}>Where Tradition Meets <em>Tomorrow</em></motion.h2>
+            <motion.p {...fadeUp(reduceMotion, 0.16)}>Follow us for new collections, styling inspiration, behind-the-scenes moments, product videos and exclusive updates.</motion.p>
+            <motion.div className={styles.socialLinks} aria-label="Social platforms" {...fadeUp(reduceMotion, 0.24)}>
               {joinLinks.map((platform) => {
                 const href = siteConfig.social[platform.key];
                 const content = (
@@ -246,32 +246,32 @@ export default function HomePage() {
                   <button key={platform.name} type="button" disabled title={`${platform.name} link is pending configuration`}>{content}</button>
                 );
               })}
-            </div>
+            </motion.div>
             {whatsappHref ? (
-              <a className={styles.whatsapp} href={whatsappHref} target="_blank" rel="noopener noreferrer">
+              <motion.a className={styles.whatsapp} href={whatsappHref} target="_blank" rel="noopener noreferrer" {...fadeUp(reduceMotion, 0.32)}>
                 <Image src="/images/figma/home/whatsapp.svg" alt="" width={24} height={24} />
                 Chat on Whatsapp
-              </a>
+              </motion.a>
             ) : (
-              <button className={styles.whatsapp} type="button" disabled title="WhatsApp number is pending configuration">
+              <motion.button className={styles.whatsapp} type="button" disabled title="WhatsApp number is pending configuration" {...fadeUp(reduceMotion, 0.32)}>
                 <Image src="/images/figma/home/whatsapp.svg" alt="" width={24} height={24} />
                 Chat on Whatsapp
-              </button>
+              </motion.button>
             )}
             {(socialsPending || !whatsappHref) && <p className={styles.socialDemo}>Social links and WhatsApp are pending configuration.</p>}
-            <div className={styles.joinStrip}>
+            <motion.div className={styles.joinStrip} {...fadeUp(reduceMotion, 0.4)}>
               <p>BE A PART OF OUR STORY</p>
               <ul>
                 {joinStrip.map((item) => <li key={item}>{item}</li>)}
               </ul>
-            </div>
+            </motion.div>
           </div>
-          <div className={styles.portrait}>
+          <motion.div className={styles.portrait} {...fadeIn(reduceMotion, 0.1)}>
             <ParallaxLayer className={styles.portraitLayer} range={3}>
               <Image src="/images/figma/home/join-background.webp" alt="Woman in an embroidered sheer saree, looking over her shoulder" fill sizes="(max-width: 700px) 100vw, 60vw" />
             </ParallaxLayer>
-          </div>
-        </ScrollReveal>
+          </motion.div>
+        </div>
       </section>
 
       <SocialFeed />

@@ -256,9 +256,9 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 22px;
   max-width: 70%;
-  padding: 22px 18px;
+  padding: 24px 18px;
 }
 
 .cardText p {
@@ -288,7 +288,7 @@
 
 .cardTitle {
   display: grid;
-  gap: 6px;
+  gap: 12px;
   justify-items: start;
 }
 
@@ -318,7 +318,7 @@
 
 .cardText {
   display: grid;
-  gap: 10px;
+  gap: 18px;
   justify-items: start;
 }
 
@@ -331,7 +331,7 @@
 .tierButton {
   width: fit-content;
   height: 42px;
-  margin-top: 4px;
+  margin-top: 6px;
   padding: 0;
   border: 0;
   border-radius: 2px;

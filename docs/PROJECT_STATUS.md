@@ -145,3 +145,12 @@ Mouse-wheel and trackpad scrolling is eased site-wide by Lenis (`apps/web/src/co
 ## Hero: gold stands travel with their models
 
 The six gold plinths are no longer part of `stage.webp`; each is its own image (`public/images/hero/plinth-<model>.webp`) drawn inside its model's layer (`plinth` in `heroLayers.ts`), so it slides away with that model. The white podium under the centre model stays in the stage and stays put while that model fades. At rest the hero still matches the approved design.
+
+## Search/menu filters, try-on slider, spacing and animations (polish round)
+
+- **Fabric links:** every fabric in the search dialog (and the matching Shop menu links) opens `/new-arrivals?fabric=…` with that fabric ticked and only those sarees listed; occasions work the same (`?occasion=Wedding`). Search also understands everyday names (kanchipuram, soft silk, bridal…). Helpers: `catalogLink` and `fabricAliases` in `lib/catalog.ts`; the page reads the link in `FiltersFromLink` (`NewArrivalsView.tsx`).
+- **Try-on slider:** both faces sit under the divider at the start (left half of the photo, right half of the result). `beforeFaceX` / `afterFaceX` on `CompareSlider` give the face middle of each picture.
+- **Try-on access cards:** more room between the title, badge, text and button.
+- **Join our world** text and the **Why Pratyangi Fashions** cards/icons now animate in as they are scrolled to.
+- **Latest from our socials:** icons are drawn at their real Figma sizes (the Facebook "f" and YouTube logo were being stretched) in a 48px chip, with the Figma arrow.
+- Tests: `e2e/polish.spec.ts`.

@@ -131,3 +131,23 @@ export const newArrivals: CatalogProduct[] = Array.from({ length: 124 }, (_, ind
 const allProducts = [...bagFeatured, ...homeProducts, ...newArrivals];
 
 export const findProduct = (id: string) => allProducts.find((product) => product.id === id);
+
+/** Catalogue link that opens New Arrivals with a fabric or occasion already ticked and the list filtered. */
+export const catalogLink = (filter: { fabric?: string; occasion?: string }) => {
+  const params = new URLSearchParams();
+  if (filter.fabric) params.set("fabric", filter.fabric);
+  if (filter.occasion) params.set("occasion", filter.occasion);
+  const query = params.toString();
+  return query ? `/new-arrivals?${query}` : "/new-arrivals";
+};
+
+/** Other names shoppers use for each fabric, so searching "kanchipuram" or "soft silk" finds the right one. */
+export const fabricAliases: Record<string, string[]> = {
+  "Uppada Pattu Saree": ["uppada"],
+  "Pattu Saree": ["pattu", "pattu silk"],
+  "Pure Silk Saree": ["pure silk", "silk"],
+  "Kanchi Pattu Saree": ["kanchipuram", "kanchipuram pattu", "kanchipuram patti", "kanchi"],
+  "Bangalore Silk Saree": ["bangalore", "soft silk"],
+  "Banarasi Saree": ["banarasi", "benarasi"],
+  "Dharmavaram Saree": ["dharmavaram"],
+};

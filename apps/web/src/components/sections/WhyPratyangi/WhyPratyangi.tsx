@@ -1,4 +1,8 @@
+"use client";
+
 import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion";
+import { easeOutExpo, fadeUp } from "@/lib/motion/presets";
 import styles from "./WhyPratyangi.module.css";
 
 const benefits = [
@@ -10,16 +14,34 @@ const benefits = [
 ];
 
 export function WhyPratyangi({ id }: { id?: string }) {
+  const reduceMotion = useReducedMotion();
+
   return (
     <section className={styles.section} id={id}>
-      <h2>Why PRATYANGI FASHIONS</h2>
+      <motion.h2 {...fadeUp(reduceMotion, 0)}>Why PRATYANGI FASHIONS</motion.h2>
       <div className={styles.grid}>
-        {benefits.map((benefit) => (
-          <article className={styles.card} key={benefit.title}>
-            <Image src={benefit.icon} alt="" width={benefit.width} height={32} />
+        {benefits.map((benefit, index) => (
+          <motion.article
+            className={styles.card}
+            key={benefit.title}
+            initial={{ opacity: 0, y: 36 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={reduceMotion ? { duration: 0 } : { duration: 0.7, ease: easeOutExpo, delay: 0.1 + index * 0.09 }}
+          >
+            {/* the icon pops in a moment after its card */}
+            <motion.span
+              style={{ display: "flex", width: "fit-content" }}
+              initial={{ opacity: 0, scale: 0.6 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={reduceMotion ? { duration: 0 } : { duration: 0.6, ease: easeOutExpo, delay: 0.3 + index * 0.09 }}
+            >
+              <Image src={benefit.icon} alt="" width={benefit.width} height={32} />
+            </motion.span>
             <h3>{benefit.title}</h3>
             <p>{benefit.body}</p>
-          </article>
+          </motion.article>
         ))}
       </div>
     </section>
