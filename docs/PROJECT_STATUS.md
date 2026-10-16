@@ -128,3 +128,9 @@ Mouse-wheel and trackpad scrolling is eased site-wide by Lenis (`apps/web/src/co
 
 - Home product cards fade up one after another as they scroll into view (`revealIndex` on `ProductCard`; plays once; instant with reduced motion).
 - "Loved by our Customers" is an endless auto-scrolling row (CSS only: two identical groups, track slides by one group's width). Pauses on hover/focus; with reduced motion it becomes a plain swipe row. Speed: `48s` in `.reviewTrack` (page.module.css).
+
+## Shop mega menu and checkout page
+
+- **Shop menu** (`SiteHeader`): Women / Men / Jewellery columns from the Figma nav bar. The hamburger turns into a cross, the label and chevron turn gold, the panel wipes down and its columns fade up one by one. Esc or a click outside closes it. All links go to `/new-arrivals` until category pages exist.
+- **Checkout** (`/checkout`, `apps/web/src/app/checkout/`): delivery address (select / add / delete, sample addresses from Figma), delivery options (Standard / Express), order summary with quantity, remove and coupon (`FIRST20`, `WELCOME10`), price details, "Proceed to Pay". Payment is a demo message only. Shared prices live in `src/lib/checkout.ts`; the bag's "Proceed to Checkout" now links here.
+- **CSS approach:** the older pages are written desktop-first (`max-width` queries). The menu and checkout are written mobile-first (base = phone, `min-width` adds wider layouts). New work should follow the mobile-first style.

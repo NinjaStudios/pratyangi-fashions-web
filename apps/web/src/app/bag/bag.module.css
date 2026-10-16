@@ -74,6 +74,7 @@
   background: linear-gradient(to right, var(--cta-from), var(--cta-to)); color: #fff;
   display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-size: 18px; cursor: pointer;
 }
+.checkout { text-decoration: none; }
 .checkout img { transform: rotate(90deg); }
 .checkout:hover:not(:disabled) { filter: brightness(1.12); }
 .checkout:disabled { opacity: .55; cursor: not-allowed; }

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronDown, ChevronRight, Menu, Search, UserRound, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, UserRound, X } from "lucide-react";
 import { easeOutExpo } from "@/lib/motion/presets";
 import styles from "./SiteHeader.module.css";
 
@@ -18,13 +18,21 @@ function BagIcon() {
   );
 }
 
-const menuLinks = [
-  { label: "Shop by Category", href: "/#categories" },
-  { label: "New Arrivals", href: "/new-arrivals" },
-  { label: "Your Bag", href: "/bag" },
-  { label: "Loved by our Customers", href: "/#reviews" },
-  { label: "Why Pratyangi Fashions", href: "/#why-pratyangi" },
+// The Shop mega menu (from the Figma nav bar). Every link goes to the catalogue until category pages exist.
+const menuGroups = [
+  { title: "WOMEN", links: ["Half Sarees", "Uppada", "Banarasi", "Kanchipuram Patti", "Dharmavaram", "Soft Silk", "Bridal Sarees", "Gadwal"] },
+  { title: "MEN", links: ["Men’s Ethnic Wear"] },
+  { title: "JEWELLERY", links: ["Jewellery", "Accessories"] },
 ];
+
+// Hamburger that turns into a cross: the outer bars rotate into an X and the middle bar fades out.
+function MenuIcon({ open }: { open: boolean }) {
+  return (
+    <span className={styles.menuIcon} data-open={open} aria-hidden="true">
+      <span /><span /><span />
+    </span>
+  );
+}
 
 const defaultSearchEntries = [
   { label: "New Arrivals", href: "/new-arrivals" },
@@ -97,9 +105,9 @@ export function SiteHeader({ bagCount }: SiteHeaderProps) {
         transition={reduceMotion ? { duration: 0 } : { duration: 0.45, ease: easeOutExpo }}
       >
         <div className={styles.headerInner}>
-          <button className={styles.shopToggle} type="button" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <X size={16} /> : <Menu size={16} />}
-            <span>Shop</span><ChevronDown size={13} />
+          <button className={styles.shopToggle} type="button" aria-label="Shop menu" aria-expanded={menuOpen} aria-controls="shop-menu" onClick={() => setMenuOpen(!menuOpen)}>
+            <MenuIcon open={menuOpen} />
+            <span>Shop</span><ChevronDown className={styles.shopChevron} size={13} />
           </button>
           <Link className={styles.brand} href="/" aria-label="Pratyangi Fashions home">
             <span className={styles.brandLogo}>
@@ -124,19 +132,35 @@ export function SiteHeader({ bagCount }: SiteHeaderProps) {
         </div>
         <AnimatePresence>
           {menuOpen && (
-            <motion.nav
-              className={styles.menuPanel}
-              aria-label="Shop sections"
-              initial={reduceMotion ? false : { opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
-              transition={{ duration: 0.22 }}
-            >
-              <div className={styles.menuPanelHeading}>Explore Pratyangi</div>
-              {menuLinks.map((link) => (
-                <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>{link.label} <ChevronRight size={15} /></Link>
-              ))}
-            </motion.nav>
+            <>
+              <div className={styles.menuBackdrop} onMouseDown={() => setMenuOpen(false)} aria-hidden="true" />
+              <motion.nav
+                id="shop-menu"
+                className={styles.menuPanel}
+                aria-label="Shop sections"
+                initial={reduceMotion ? false : { opacity: 0, clipPath: "inset(0 0 100% 0)" }}
+                animate={{ opacity: 1, clipPath: "inset(0 0 0% 0)" }}
+                exit={reduceMotion ? undefined : { opacity: 0, clipPath: "inset(0 0 100% 0)" }}
+                transition={reduceMotion ? { duration: 0 } : { duration: 0.42, ease: easeOutExpo }}
+              >
+                {menuGroups.map((group, groupIndex) => (
+                  <motion.div
+                    className={styles.menuGroup}
+                    key={group.title}
+                    initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={reduceMotion ? { duration: 0 } : { duration: 0.45, ease: easeOutExpo, delay: 0.12 + groupIndex * 0.07 }}
+                  >
+                    <h2>{group.title}</h2>
+                    <ul>
+                      {group.links.map((label) => (
+                        <li key={label}><Link href="/new-arrivals" onClick={() => setMenuOpen(false)}>{label}</Link></li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                ))}
+              </motion.nav>
+            </>
           )}
         </AnimatePresence>
       </motion.header>

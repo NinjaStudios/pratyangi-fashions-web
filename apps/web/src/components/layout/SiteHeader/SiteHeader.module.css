@@ -40,14 +40,6 @@
   .headerActions a:nth-of-type(2) svg { width: clamp(30px, 3.2vw, 46px); height: auto; margin-right: clamp(-8px, -0.55vw, -5px); }
 }
 .count { position: absolute; right: -9px; top: 2px; background: var(--wine); color: white; font-size: 9px; line-height: 15px; min-width: 15px; text-align: center; border-radius: 50%; }
-.menuPanel {
-  position: absolute; top: calc(100% - 1px); left: max(3%, calc((100vw - 1320px)/2));
-  width: min(355px, 94vw); padding: 24px; background: var(--cream); z-index: 32;
-  border: 1px solid rgba(172, 135, 52, .36); box-shadow: 0 16px 35px #321d1630;
-}
-.menuPanelHeading { font: 500 21px var(--font-display); color: var(--wine); padding: 0 0 14px; }
-.menuPanel a { text-decoration: none; color: var(--ink); display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-top: 1px solid #e3ddc9; font-size: 14px; }
-.menuPanel a:hover { color: var(--gold); }
 
 .scrim { position: fixed; z-index: 80; inset: 0; padding: 20px; display: grid; place-items: center; background: #1e130fb8; }
 .dialog { position: relative; width: min(100%, 510px); max-height: min(82dvh, 720px); overflow: auto; padding: 38px clamp(24px, 5vw, 42px); background: var(--cream); border: 1px solid #d9c68b; box-shadow: 0 22px 80px #190a0b55; }
@@ -69,7 +61,6 @@
   .brandName { font-size: clamp(14px, 2.2vw, 18px); }
   .brandTagline { font-size: 10px; }
   .brandLogo { width: 52px; height: 52px; }
-  .menuPanel { left: 4%; width: min(355px, 92vw); }
 }
 @media (min-width: 701px) and (max-width: 900px) {
   .searchButton { width: clamp(100px, 18vw, 180px); height: 36px; font-size: 12px; padding: 0 12px; }
@@ -92,7 +83,58 @@
   .dialog h2 { font-size: 26px; }
 }
 @media (max-width: 480px) {
-  .shopToggle span { display: none; }
+  .shopToggle > span:not(.menuIcon) { display: none; }
   .shopToggle svg:last-child { display: none; }
   .brandTagline { display: none; }
+}
+
+/* Shop mega menu. Written mobile-first: the base styles are the phone layout, wider screens add to them. */
+.menuIcon { position: relative; flex: none; width: 22px; height: 18px; }
+.menuIcon span {
+  position: absolute; left: 0; width: 100%; height: 2.5px; border-radius: 2px; background: currentColor;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease, top 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.menuIcon span:nth-child(1) { top: 0; }
+.menuIcon span:nth-child(2) { top: 7.75px; }
+.menuIcon span:nth-child(3) { top: 15.5px; }
+.menuIcon[data-open="true"] span:nth-child(1) { top: 7.75px; transform: rotate(45deg); }
+.menuIcon[data-open="true"] span:nth-child(2) { opacity: 0; transform: scaleX(0.2); }
+.menuIcon[data-open="true"] span:nth-child(3) { top: 7.75px; transform: rotate(-45deg); }
+
+.shopChevron { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+.shopToggle[aria-expanded="true"] { color: #d4af37; }
+.shopToggle[aria-expanded="true"] .shopChevron { transform: rotate(180deg); }
+
+.menuBackdrop { position: fixed; inset: 0; z-index: 31; }
+
+.menuPanel {
+  position: absolute; z-index: 32; top: 100%; left: 0; right: 0;
+  display: grid; gap: 28px; padding: 24px 20px 32px;
+  max-height: calc(100dvh - 62px); overflow-y: auto;
+  background: #e5e3d9; box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+}
+.menuGroup h2 { margin: 0 0 10px; font: 600 18px/normal var(--font-body); color: var(--burgundy); }
+.menuGroup ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.menuGroup a {
+  display: block; padding: 6px 0; color: #000; text-decoration: none; font: 400 16px/24px var(--font-body);
+  transition: color 0.2s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.menuGroup a:hover, .menuGroup a:focus-visible { color: var(--burgundy); transform: translateX(4px); }
+
+@media (min-width: 701px) {
+  .menuPanel { grid-template-columns: repeat(3, max-content); column-gap: 64px; padding: 40px clamp(24px, 5.5vw, 80px) 48px; max-height: calc(100dvh - 72px); }
+  .menuGroup h2 { font-size: 20px; margin-bottom: 14px; }
+  .menuGroup ul { gap: 0; }
+  .menuGroup a { padding: 0; }
+  .menuGroup li + li { margin-top: 8px; }
+}
+
+@media (min-width: 1100px) {
+  /* Figma: a 1088px-wide panel starting at the left margin, columns at 80px / 340px / 564px inside it. */
+  .menuPanel {
+    left: max(80px, calc((100vw - 1440px) / 2 + 80px)); right: auto;
+    width: min(1088px, calc(100vw - 160px)); min-height: 491px; max-height: none;
+    grid-template-columns: 260px 224px auto; column-gap: 0; padding: 64px 80px 56px;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+  }
 }
