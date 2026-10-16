@@ -37,8 +37,14 @@
 }
 
 .plate,
-.model img {
+.model img,
+.plinth img {
   object-fit: fill;
+}
+
+/* The gold stand under a model: positioned in the model's own box (it is wider than the model), so it moves with it. */
+.plinth {
+  position: absolute;
 }
 
 .model {

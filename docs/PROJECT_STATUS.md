@@ -141,3 +141,7 @@ Mouse-wheel and trackpad scrolling is eased site-wide by Lenis (`apps/web/src/co
 - Home-page section titles (New Arrivals, Wedding Collection, Festive Collections, Best Sellers, Loved by our Customers) all use `RevealHeading` (`components/motion/RevealHeading.tsx`): the title rises and sharpens from a soft blur, then "See all" follows. Cards or the reviews row ease in after it.
 - Shop menu: the WOMEN / MEN / JEWELLERY titles draw a gold line in on hover and back out on leave; a hovered link slides a little to the right (10px); links stay lined up with their title otherwise.
 - `e2e/hover-states.spec.ts` covers the hover effects (desktop only).
+
+## Hero: gold stands travel with their models
+
+The six gold plinths are no longer part of `stage.webp`; each is its own image (`public/images/hero/plinth-<model>.webp`) drawn inside its model's layer (`plinth` in `heroLayers.ts`), so it slides away with that model. The white podium under the centre model stays in the stage and stays put while that model fades. At rest the hero still matches the approved design.
