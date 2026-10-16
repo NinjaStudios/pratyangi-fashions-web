@@ -5,19 +5,24 @@ import type { FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, BadgeCheck, ChevronDown, Info, LockKeyhole, MapPin, Pencil, ShieldCheck, Ticket, Trash2, Truck } from "lucide-react";
+import { ArrowRight, BadgeCheck, Check, ChevronDown, CreditCard, Info, LockKeyhole, MapPin, Pencil, ShieldCheck, Ticket, Trash2, Truck } from "lucide-react";
 import { SiteFooter } from "@/components/layout/SiteFooter/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader/SiteHeader";
 import { useBag } from "@/lib/bag";
 import { findProduct, formatInr } from "@/lib/catalog";
-import { coupons, deliveryOptions, demoAddresses, freeShippingThreshold, type SavedAddress } from "@/lib/checkout";
+import { coupons, deliveryOptions, demoAddresses, type SavedAddress } from "@/lib/checkout";
 import { easeOutExpo } from "@/lib/motion/presets";
 import styles from "./checkout.module.css";
 
 const steps = ["Delivery", "Payment", "Review & Place Order"];
 const quantities = Array.from({ length: 10 }, (_, index) => index + 1);
 const emptyForm = { label: "Home", name: "", phone: "", lines: "" };
-const standardShippingFee = 99;
+const paymentMethods = [
+  { id: "upi", name: "UPI", note: "Pay with GPay, PhonePe or any UPI app" },
+  { id: "card", name: "Credit / Debit card", note: "Visa, Mastercard and RuPay" },
+  { id: "netbanking", name: "Net banking", note: "All major Indian banks" },
+  { id: "cod", name: "Cash on delivery", note: "Pay when your order arrives" },
+];
 
 export function CheckoutView() {
   const bag = useBag();
@@ -31,6 +36,8 @@ export function CheckoutView() {
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [couponMessage, setCouponMessage] = useState("");
   const [status, setStatus] = useState("");
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [paymentId, setPaymentId] = useState("upi");
 
   const items = bag.lines.flatMap((line) => {
     const product = findProduct(line.id);
@@ -39,7 +46,7 @@ export function CheckoutView() {
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
   const subtotal = items.reduce((total, item) => total + item.product.priceInr * item.quantity, 0);
   const discount = appliedCoupon ? Math.round(subtotal * coupons[appliedCoupon]) : 0;
-  const standardFee = subtotal === 0 || subtotal >= freeShippingThreshold ? 0 : standardShippingFee;
+  const standardFee = 0;
   const expressFee = deliveryOptions.find((option) => option.id === "express")?.fee ?? 99;
   const feeFor = (id: string) => (id === "express" ? expressFee : standardFee);
   const shipping = subtotal === 0 ? 0 : feeFor(deliveryId);
@@ -76,9 +83,25 @@ export function CheckoutView() {
     if (addressId === id) setAddressId(remaining[0]?.id ?? "");
   };
 
+  const chosenAddress = addresses.find((address) => address.id === addressId);
+  const chosenDelivery = deliveryOptions.find((option) => option.id === deliveryId);
+  const chosenPayment = paymentMethods.find((method) => method.id === paymentId);
+
+  const goTo = (next: 1 | 2 | 3) => {
+    setStatus("");
+    setStep(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const proceed = () => {
-    if (!addressId) setStatus("Please choose or add a delivery address first.");
-    else setStatus("Payment is not available in this local demo — no order or payment was created.");
+    if (step === 1) {
+      if (!chosenAddress) setStatus("Please choose or add a delivery address first.");
+      else goTo(2);
+    } else if (step === 2) {
+      goTo(3);
+    } else {
+      setStatus("Placing orders is not available in this local demo — no order or payment was created.");
+    }
   };
 
   const reveal = (delay: number) => ({
@@ -104,8 +127,8 @@ export function CheckoutView() {
           </div>
           <ol className={styles.steps} aria-label="Checkout progress">
             {steps.map((label, index) => (
-              <li key={label} className={index === 0 ? styles.stepActive : undefined} aria-current={index === 0 ? "step" : undefined}>
-                <span className={styles.stepNumber}>{index + 1}</span>
+              <li key={label} className={index + 1 <= step ? styles.stepActive : undefined} aria-current={index + 1 === step ? "step" : undefined}>
+                <span className={styles.stepNumber}>{index + 1 < step ? <Check size={16} aria-hidden="true" /> : index + 1}</span>
                 <span className={styles.stepLabel}>{label}</span>
               </li>
             ))}
@@ -116,6 +139,7 @@ export function CheckoutView() {
 
         <div className={styles.layout}>
           <div className={styles.main}>
+            {step === 1 && (<>
             <motion.section className={styles.card} aria-labelledby="address-title" {...reveal(0.05)}>
               <div className={styles.cardHeading}>
                 <MapPin className={styles.cardIcon} size={28} strokeWidth={1.5} aria-hidden="true" />
@@ -199,6 +223,61 @@ export function CheckoutView() {
                 })}
               </div>
             </motion.section>
+            </>)}
+
+            {step === 2 && (
+              <motion.section className={styles.card} aria-labelledby="payment-title" {...reveal(0.05)}>
+                <div className={styles.cardHeading}>
+                  <CreditCard className={styles.cardIcon} size={28} strokeWidth={1.5} aria-hidden="true" />
+                  <div className={styles.cardTitle}>
+                    <h2 id="payment-title">Payment Method</h2>
+                    <p>Choose how you would like to pay</p>
+                  </div>
+                </div>
+                <div className={styles.deliveryChoices} role="radiogroup" aria-label="Payment methods">
+                  {paymentMethods.map((method) => (
+                    <label key={method.id} className={`${styles.deliveryChoice} ${method.id === paymentId ? styles.selectedDelivery : ""}`}>
+                      <input type="radio" name="payment" checked={method.id === paymentId} onChange={() => setPaymentId(method.id)} />
+                      <CreditCard size={28} strokeWidth={1.5} aria-hidden="true" />
+                      <span className={styles.deliveryText}>
+                        <span className={styles.deliveryTop}><strong>{method.name}</strong></span>
+                        <span>{method.note}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <button type="button" className={styles.backLink} onClick={() => goTo(1)}>← Back to delivery</button>
+              </motion.section>
+            )}
+
+            {step === 3 && (
+              <motion.section className={styles.card} aria-labelledby="review-title" {...reveal(0.05)}>
+                <div className={styles.cardHeading}>
+                  <BadgeCheck className={styles.cardIcon} size={28} strokeWidth={1.5} aria-hidden="true" />
+                  <div className={styles.cardTitle}>
+                    <h2 id="review-title">Review &amp; Place Order</h2>
+                    <p>Check everything before you place your order</p>
+                  </div>
+                </div>
+                <dl className={styles.reviewList}>
+                  <div>
+                    <dt>Delivering to</dt>
+                    <dd>{chosenAddress ? `${chosenAddress.name} — ${chosenAddress.lines}, ${chosenAddress.phone}` : "No address selected"}</dd>
+                    <button type="button" onClick={() => goTo(1)}>Change</button>
+                  </div>
+                  <div>
+                    <dt>Delivery</dt>
+                    <dd>{chosenDelivery ? `${chosenDelivery.name} (${chosenDelivery.window})` : ""}</dd>
+                    <button type="button" onClick={() => goTo(1)}>Change</button>
+                  </div>
+                  <div>
+                    <dt>Payment</dt>
+                    <dd>{chosenPayment?.name}</dd>
+                    <button type="button" onClick={() => goTo(2)}>Change</button>
+                  </div>
+                </dl>
+              </motion.section>
+            )}
           </div>
 
           <motion.aside className={`${styles.card} ${styles.summary}`} aria-labelledby="summary-title" {...reveal(0.18)}>
@@ -256,7 +335,7 @@ export function CheckoutView() {
               <dl>
                 <div><dt>Subtotal ({itemLabel})</dt><dd>{formatInr(subtotal)}</dd></div>
                 <div>
-                  <dt>Shipping Charges <Info size={14} aria-label={`Standard shipping is free on orders above ${formatInr(freeShippingThreshold)}`} /></dt>
+                  <dt>Shipping Charges <Info size={14} aria-label={`Standard delivery is always free`} /></dt>
                   <dd className={shipping ? undefined : styles.positive}>{shipping ? formatInr(shipping) : "FREE"}</dd>
                 </div>
                 {appliedCoupon && <div><dt>Discount ({appliedCoupon})</dt><dd className={styles.positive}>- {formatInr(discount)}</dd></div>}
@@ -274,7 +353,7 @@ export function CheckoutView() {
 
             <button type="button" className={styles.pay} disabled={!items.length} onClick={proceed}>
               <LockKeyhole size={20} aria-hidden="true" />
-              Proceed to Pay
+              {step === 1 ? "Proceed to Pay" : step === 2 ? "Review Order" : "Place Order"}
               <ArrowRight size={24} aria-hidden="true" />
             </button>
             <p className={styles.assurance}>

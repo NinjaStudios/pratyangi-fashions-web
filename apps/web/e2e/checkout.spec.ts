@@ -77,9 +77,24 @@ test.describe("checkout", () => {
     await expect(deletes).toHaveCount(count - 1);
   });
 
-  test("Proceed to Pay explains that payment is a demo", async ({ page }) => {
+  test("the steps move from delivery to payment to review, and placing the order is a demo", async ({ page }) => {
     await page.goto("/checkout");
     await page.getByRole("button", { name: /Proceed to Pay/ }).click();
+    await expect(page.getByRole("heading", { name: "Payment Method" })).toBeVisible();
+    await expect(page.getByRole("listitem").filter({ hasText: "Payment" }).first()).toHaveAttribute("aria-current", "step");
+
+    await page.getByRole("radio", { name: /Cash on delivery/ }).check({ force: true });
+    await page.getByRole("button", { name: /Review Order/ }).click();
+    await expect(page.getByRole("heading", { name: /Review & Place Order/ , level: 2 })).toBeVisible();
+    await expect(page.getByText("Cash on delivery").first()).toBeVisible();
+
+    await page.getByRole("button", { name: /Place Order/ }).click();
     await expect(page.getByRole("status").filter({ hasText: "not available in this local demo" })).toBeVisible();
+  });
+
+  test("standard delivery is free, as in the design", async ({ page }) => {
+    await page.goto("/checkout");
+    await expect(page.getByRole("radio", { name: /Standard Delivery/ })).toBeChecked();
+    await expect(page.locator("[class*=prices]").getByText("FREE")).toBeVisible();
   });
 });

@@ -5,7 +5,6 @@
 
 .announcement {
   min-height: 40px;
-  padding: 0 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -13,6 +12,7 @@
   background: var(--burgundy);
   color: #fff;
   font-size: 14px;
+  padding: 0 20px;
 }
 
 .announcement p {
@@ -22,13 +22,14 @@
 .main {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 56px 24px 72px;
+  padding: 36px 16px 56px;
 }
 
 .heading h1 {
   margin: 0;
   color: #b77001;
   font: 600 32px/1.2 var(--font-display);
+  font-size: 26px;
 }
 
 .heading p {
@@ -40,9 +41,9 @@
 .layout {
   margin-top: 32px;
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
   gap: 32px;
   align-items: start;
+  grid-template-columns: 1fr;
 }
 
 .sidebar {
@@ -55,19 +56,24 @@
   background: #fff;
   border: 1px solid #eadfc8;
   border-radius: 4px;
+  display: flex;
+  overflow-x: auto;
 }
 
 .navItem {
   display: grid;
-  grid-template-columns: 18px 1fr 14px;
   align-items: center;
   gap: 14px;
   padding: 16px 18px;
   color: #222;
   font-size: 14px;
   text-decoration: none;
-  border-bottom: 1px solid #f1e9d8;
   transition: background-color 200ms ease, color 200ms ease;
+  flex: none;
+  grid-template-columns: 18px auto;
+  border-bottom: 0;
+  border-right: 1px solid #f1e9d8;
+  white-space: nowrap;
 }
 
 .navItem:last-child {
@@ -118,43 +124,45 @@ a.navActive:hover {
   text-align: center;
 }
 
-@media (max-width: 960px) {
-  .announcement {
-    padding: 0 20px;
-  }
-
-  .announcementLinks {
-    display: none;
-  }
-
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar nav {
-    display: flex;
-    overflow-x: auto;
-  }
-
-  .navItem {
-    flex: none;
-    grid-template-columns: 18px auto;
-    border-bottom: 0;
-    border-right: 1px solid #f1e9d8;
-    white-space: nowrap;
-  }
-
-  .navItem svg:last-child {
-    display: none;
-  }
+.announcementLinks,
+.navItem svg:last-child {
+  display: none;
 }
 
-@media (max-width: 600px) {
+@media (min-width: 601px) {
   .main {
-    padding: 36px 16px 56px;
+    padding: 56px 24px 72px;
   }
 
   .heading h1 {
-    font-size: 26px;
+    font: 600 32px/1.2 var(--font-display);
+  }
+}
+
+@media (min-width: 961px) {
+  .announcement {
+    padding: 0 64px;
+  }
+
+  .layout {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+
+  .sidebar nav {
+    overflow: hidden;
+    display: revert;
+  }
+
+  .navItem {
+    grid-template-columns: 18px 1fr 14px;
+    border-right: revert;
+    border-bottom: 1px solid #f1e9d8;
+    flex: revert;
+    white-space: revert;
+  }
+
+  .announcementLinks,
+  .navItem svg:last-child {
+    display: revert;
   }
 }
