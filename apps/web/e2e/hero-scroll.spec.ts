@@ -186,3 +186,22 @@ test.describe("hero and Shop by Category layering", () => {
     });
   });
 });
+
+test("each side model carries its gold stand away with it", async ({ page }) => {
+  await page.goto("/");
+  const stand = (id: string) => page.locator(`[data-hero-model="${id}"] [class*=plinth]`);
+  const left = async (locator: ReturnType<typeof stand>) => (await locator.boundingBox())!.x;
+  const hero = (await heroBox(page))!;
+
+  for (const id of [...LEFT, ...RIGHT]) {
+    await scrollToY(page, 0);
+    const standAtRest = await left(stand(id));
+    const modelAtRest = await modelBox(page, id);
+    await scrollToY(page, hero.height * 0.8);
+    await expect.poll(async () => Math.abs((await left(stand(id))) - standAtRest)).toBeGreaterThan(40);
+    const standMoved = (await left(stand(id))) - standAtRest;
+    const modelMoved = (await modelBox(page, id)).left - modelAtRest.left;
+    expect(Math.abs(standMoved - modelMoved), `${id}: stand and model move together`).toBeLessThan(1);
+    expect(Math.sign(standMoved)).toBe(LEFT.includes(id) ? -1 : 1);
+  }
+});

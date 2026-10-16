@@ -21,6 +21,7 @@ function HeroModelLayer({ model, progress, still }: { model: HeroModel; progress
   const travel = still ? 0 : (model.travel / model.width) * 100;
   const x = useTransform(progress, [0, 1], ["0%", `${travel}%`], { ease: soft });
   const fade = model.fade;
+  const plinth = model.plinth;
   const opacity = useTransform(progress, fade ? [fade.from, fade.to] : [0, 1], [1, fade && !still ? fade.end : 1], { ease: soft });
 
   return (
@@ -37,6 +38,19 @@ function HeroModelLayer({ model, progress, still }: { model: HeroModel; progress
       }}
       data-hero-model={model.id}
     >
+      {plinth && (
+        <div
+          className={styles.plinth}
+          style={{
+            left: pct(plinth.x - model.x, model.width),
+            top: pct(plinth.y - model.y, model.height),
+            width: pct(plinth.width, model.width),
+            height: pct(plinth.height, model.height),
+          }}
+        >
+          <Image src={plinth.src} alt="" fill priority sizes="20vw" aria-hidden="true" />
+        </div>
+      )}
       <Image src={model.src} alt="" fill priority sizes="30vw" aria-hidden="true" />
     </motion.div>
   );
