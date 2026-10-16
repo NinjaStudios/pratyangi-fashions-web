@@ -60,7 +60,7 @@ everything works. It does this twice: once at desktop size and once at phone siz
 
 | Command | What it does | What you should see |
 | --- | --- | --- |
-| `pnpm test` | **Builds the website, then runs all the tests.** Takes about a minute. The browser runs invisibly. | A list of lines starting with `ok`, ending in **`24 passed`**. A failed test shows a red `x` and says what went wrong. |
+| `pnpm test` | **Builds the website, then runs all the tests.** Takes about a minute. The browser runs invisibly. | A list of lines starting with `ok`, ending in **`30 passed`**. A failed test shows a red `x` and says what went wrong. |
 | `pnpm test:headed` | The same tests, but **in a visible browser window** so you can watch the robot work. | A Chrome window opens and moves by itself, then closes. |
 | `pnpm test:ui` | Opens **Playwright's viewer**: a window listing every test. Click a test to run it, then step back and forward to see the page at each step. | A window with a test list on the left and the page on the right. Close the window to finish. |
 | `pnpm --filter pratyangi-web run test:e2e:report` | Opens the **report of the last test run** in your browser. | A web page listing each test. A failed test has a screenshot and a video. Press Ctrl + C in the terminal to close it. |

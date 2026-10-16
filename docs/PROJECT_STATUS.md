@@ -18,8 +18,9 @@ The design source is the Figma prototype plus the supplied PDFs, screenshots and
 
 ### Home page sections
 
-- Sticky header with Shop menu and a search dialog (keyboard accessible)
-- Hero showcase pinned behind the page while Shop by Category slides over it, with a scroll-linked blur/dim
+- Sticky header matched to the original proportions (emblem-only logo, 18px Shop label, 253×46 search pill, solid bag
+  and account icons), with Shop menu and a search dialog (keyboard accessible)
+- Hero showcase pinned behind the page while Shop by Category slides over it, with a gentle scroll-linked dim; the "Shop by Category" heading appears only while scrolling (no blur)
 - Shop by Category carousel (arrows, swipe, snap, keyboard focus)
 - New Arrivals, Wedding Collection, Festive Collections and Best Sellers rows
 - Loved by our Customers (reviews)
@@ -109,7 +110,7 @@ The design source is the Figma prototype plus the supplied PDFs, screenshots and
 
 ## How the UI is checked
 
-Automated: `pnpm test` runs 24 Playwright browser tests (12 at desktop size, 12 at phone size) against the production
+Automated: `pnpm test` runs 30 Playwright browser tests (15 at desktop size, 15 at phone size) against the production
 build: page titles, broken images, console errors, horizontal overflow, header menu and search dialog keyboard
 behaviour, add to cart, the category carousel, and the hero/category scroll layering including reduced motion.
 Details and how to watch the tests run are in the README. A deliberate break of the hero pinning was used once to
