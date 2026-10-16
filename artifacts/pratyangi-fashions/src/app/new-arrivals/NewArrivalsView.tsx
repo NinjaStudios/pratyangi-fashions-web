@@ -42,7 +42,7 @@ function pageList(current: number, total: number): (number | "gap")[] {
 export function NewArrivalsView() {
   const bag = useBag();
   const [categoriesOpen, setCategoriesOpen] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const [category, setCategory] = useState<string | null>(null);
   const [priceIndex, setPriceIndex] = useState(priceStops.length - 1);
   const [selectedFabrics, setSelectedFabrics] = useState<string[]>([]);

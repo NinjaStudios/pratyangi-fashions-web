@@ -1,0 +1,210 @@
+.section {
+  padding: 64px 5.5% 72px;
+  background:
+    radial-gradient(120% 90% at 20% 0%, rgba(120, 78, 48, .55) 0%, rgba(120, 78, 48, 0) 60%),
+    linear-gradient(180deg, #3a271c 0%, #241812 55%, #140d0a 100%);
+  color: #f6efe3;
+}
+
+.inner {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+}
+
+.eyebrow {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #e6d6b8;
+  font-size: 12px;
+  letter-spacing: .14em;
+}
+
+.eyebrow span {
+  width: 74px;
+  height: 1px;
+  background: currentColor;
+}
+
+.header h2 {
+  margin: 14px 0 0;
+  color: #fbf6ea;
+  font: 400 clamp(32px, 3.27vw, 47px)/1.12 var(--font-display);
+}
+
+.aside {
+  max-width: 480px;
+  margin: 0;
+  color: #e6d6b8;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.card {
+  position: relative;
+  height: 500px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 90px 90px 24px 24px;
+  background: #2a1f18;
+  isolation: isolate;
+}
+
+.photo {
+  object-fit: cover;
+  object-position: center top;
+  z-index: -2;
+  transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (hover: hover) {
+  .card:hover .photo {
+    transform: scale(1.04);
+  }
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(20, 13, 10, .35) 0%, rgba(20, 13, 10, .15) 35%, rgba(20, 13, 10, .85) 100%);
+}
+
+/* Content sits in the lower part of the card, as in the Figma frame: icon, two-line title, Coming Soon, arrow. */
+.content {
+  position: absolute;
+  inset: 0;
+  padding: 0 16px 62px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  text-align: center;
+}
+
+.platform {
+  width: 46px;
+  height: 46px;
+  margin-bottom: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(20, 13, 10, .6);
+}
+
+.content h3 {
+  margin: 0 0 16px;
+  color: #fbf6ea;
+  font: 400 24px/1.25 var(--font-body);
+}
+
+.soon {
+  color: #f1e6d0;
+  font: 400 22px/1.1 var(--font-display);
+  opacity: .9;
+}
+
+.arrow {
+  margin-top: 28px;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .85);
+  border-radius: 50%;
+  color: #fbf6ea;
+}
+
+@media (max-width: 1080px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .section {
+    padding: 44px 0 52px 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 26px;
+    padding-right: 16px;
+  }
+
+  .aside {
+    font-size: 13px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-right: 16px;
+    gap: 14px;
+  }
+
+  .card {
+    height: 420px;
+  }
+
+  .content {
+    padding-bottom: 44px;
+  }
+
+  .platform {
+    margin-bottom: 18px;
+  }
+
+  .content h3 {
+    font-size: 20px;
+  }
+
+  .soon {
+    font-size: 19px;
+  }
+
+  .card:last-child {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc(50% - 7px);
+  }
+}
+
+/* Slightly taller than the card so the image can drift without exposing an edge. */
+.photoLayer {
+  position: absolute;
+  inset: -3% 0;
+  z-index: -2;
+  will-change: transform;
+}
+
+.photoLayer .photo {
+  z-index: auto;
+}
+
+.card {
+  transition: border-color 250ms ease;
+}
+
+@media (hover: hover) {
+  .card:hover {
+    border-color: rgba(255, 255, 255, .45);
+  }
+}

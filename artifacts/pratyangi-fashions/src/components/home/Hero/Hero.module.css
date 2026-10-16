@@ -1,6 +1,8 @@
 .hero {
-  position: relative;
-  z-index: 1;
+  /* Pinned just below the sticky header; the sections that follow scroll up over it (see .layered in page.module.css). */
+  position: sticky;
+  top: var(--header-h, 82px);
+  z-index: 0;
   width: 100%;
   aspect-ratio: 1440 / 591;
   min-height: clamp(220px, 41vw, 591px);
@@ -9,7 +11,11 @@
   isolation: isolate;
 }
 
-.scene { position: absolute; inset: 0; will-change: transform; }
+/* Same size as the hero so no model is cropped. */
+.stage {
+  position: absolute;
+  inset: 0;
+}
 
 .showroom {
   object-fit: cover;
@@ -27,15 +33,26 @@
   }
 }
 
+/* Phones: widen the stage so only the three central models show, with the centre model on the central podium. */
 @media (max-width: 560px) {
   .hero {
-    aspect-ratio: 4 / 3;
-    min-height: clamp(240px, 75vw, 420px);
+    aspect-ratio: 1.3085;
+    min-height: 0;
+  }
+
+  .stage {
+    top: 0;
+    right: auto;
+    bottom: auto;
+    left: -43%;
+    width: 186%;
+    height: auto;
+    aspect-ratio: 1440 / 591;
   }
 
   .showroom {
     object-fit: cover;
-    object-position: center 18%;
+    object-position: center top;
   }
 }
 
@@ -47,8 +64,4 @@
   .showroom {
     object-position: center 22%;
   }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .scene { transform: none !important; }
 }
