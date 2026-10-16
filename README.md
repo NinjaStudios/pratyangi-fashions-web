@@ -1,154 +1,128 @@
 # Pratyangi Fashions
 
-Storefront for Pratyangi Fashions, built from the supplied Figma prototype and screen recording.
+Online storefront for Pratyangi Fashions (silk sarees), built from the supplied Figma prototype and screen recording.
 
-**Current phase: frontend UI only** — design system, responsive layouts, hero and scroll animations, carousels and
-interactive components. Demo data (bag, account, orders) lives in the browser's `localStorage`.
-The backend (Express + MySQL) is planned for a later phase; see [Backend phase](#backend-phase-planned).
+**Phase:** frontend UI. The backend (orders, accounts, payments) is planned for a later phase.
+Progress, decisions and open items are tracked in [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md).
+The backend design is in [docs/BACKEND_PLAN.md](docs/BACKEND_PLAN.md).
 
-## Tech stack
+## Technology stack (decided 2026-10-16)
 
-| Layer | Technology |
-| --- | --- |
-| Framework | Next.js 16 (App Router), static export (`output: "export"`) |
-| Language | TypeScript |
-| UI | React 19 |
-| Styling | CSS Modules + global CSS variables (`src/app/globals.css`) |
-| Animation | Framer Motion + CSS transitions/keyframes |
-| Icons | Lucide React |
-| Package manager | pnpm workspace |
-| Source control | Git + GitHub |
+| Layer | Choice | Status |
+| --- | --- | --- |
+| Frontend framework | Next.js 16 (App Router), static export | Built |
+| Language | TypeScript | Built |
+| UI library | React 19 | Built |
+| Styling | CSS Modules + global CSS variables | Built |
+| Animation | Framer Motion + CSS transitions | Built |
+| Icons | Lucide React | Built |
+| UI state / demo data | React hooks + browser `localStorage` | Built |
+| Package manager | pnpm workspace | Built |
+| Source control | Git + GitHub | In use |
+| Preview deployments | Vercel (per-branch preview links) | To set up |
+| Backend | Node.js + Express (TypeScript) | Planned |
+| Database | MySQL 8 + `mysql2`, plain numbered SQL upgrade scripts | Planned |
+| Production hosting | Linux VPS (Nginx + Express under a process manager, MySQL on the same server at first) | Planned |
 
-The storefront stays on Next.js (it is not being replaced by Vite).
+Not used: Vite, Tailwind CSS. The storefront stays on Next.js with CSS Modules.
+The existing shared cPanel hosting is not used for the store's backend (see the backend plan for why).
 
-### Packages the storefront needs
+## Quick start
 
-Only five runtime packages, all declared in `artifacts/pratyangi-fashions/package.json`:
-
-| Package | Used for |
-| --- | --- |
-| `next` | Routing, build and static export |
-| `react`, `react-dom` | UI |
-| `framer-motion` | Scroll-linked and entrance animations |
-| `lucide-react` | Icons |
-
-Dev-only: `typescript`, `@types/node`, `@types/react`, `@types/react-dom`.
-
-## Repository layout
-
-```
-artifacts/
-  pratyangi-fashions/   Next.js storefront (the app you run)
-    src/app/            Routes: /, /new-arrivals, /bag, /account, /account/orders
-    src/components/     home, layout, sections, account, motion, ui/ProductCard
-    src/lib/            catalog data, bag and account (localStorage), siteConfig
-    public/images/      Images used by the site
-    reference/          Design reference screenshots (not shipped)
-  api-server/           Express API skeleton for the backend phase (not needed to run the UI)
-lib/                    Shared packages used by api-server (database/API layers; to be reworked for MySQL)
-```
-
-## Prerequisites
-
-- **Node.js 20.9 or newer** (developed on Node 24) — <https://nodejs.org>
-- **pnpm 10** — this repo refuses `npm install` / `yarn install` on purpose.
+Requirements: **Node.js 20.9+** (developed on Node 24) and **pnpm 10**.
 
 ```bash
-npm install -g pnpm@10
-# or, if you prefer not to install globally:
-corepack enable
-```
-
-## Setup
-
-```bash
+npm install -g pnpm@10          # once; or: corepack enable
 git clone https://github.com/NinjaStudios/pratyangi-fashions-web.git
 cd pratyangi-fashions-web
 pnpm install
+pnpm dev                        # http://localhost:3000
 ```
 
-`pnpm install` also fixes "module not found" errors — run it again after pulling changes or switching branches.
+That is all: no accounts, API keys or environment files are needed to run the UI.
 
-## Run
+## Commands
 
-All commands run from the repository root (works the same in PowerShell, Command Prompt and bash).
+Run from the repository root (PowerShell, Command Prompt and bash all work).
 
-| Task | Command |
+| Command | What it does |
 | --- | --- |
-| Start the dev server (http://localhost:3000) | `pnpm --filter @workspace/pratyangi-fashions run dev` |
-| Type-check everything | `pnpm run typecheck` |
-| Production build (writes the static site to `artifacts/pratyangi-fashions/out`) | `pnpm --filter @workspace/pratyangi-fashions run build` |
-| Preview the built site (http://localhost:3000) | `pnpm --filter @workspace/pratyangi-fashions run preview` |
+| `pnpm dev` | Start the dev server at http://localhost:3000 |
+| `pnpm typecheck` | Check all TypeScript |
+| `pnpm build` | Production build; writes the static site to `apps/web/out` |
+| `pnpm preview` | Serve the built site at http://localhost:3000 (run `pnpm build` first) |
+| `pnpm --filter pratyangi-web add <package>` | Add a dependency to the storefront |
 
 Notes:
 
-- The dev server listens on all interfaces, so you can open `http://<your-PC-IP>:3000` on a phone on the same Wi-Fi.
-- `next start` does not work with a static export. Use the `preview` command instead (it runs `npx serve out`).
-- Run `build` before `preview`.
+- `next start` does not work with a static export; use `pnpm preview`.
+- To try the dev site on a phone on the same Wi-Fi, open `http://<your-PC-IP>:3000`. This has not been tested; if
+  scripts do not load, add that address to `allowedDevOrigins` in `apps/web/next.config.ts`.
+- `pnpm install` also fixes "module not found" errors. Run it again after pulling changes.
+- New package versions must be at least one day old (`minimumReleaseAge` in `pnpm-workspace.yaml`; a supply-chain safety setting).
 
-### Adding a package
+## Project structure
 
-```bash
-pnpm --filter @workspace/pratyangi-fashions add <package-name>
+```
+apps/
+  web/                    The storefront (Next.js)
+    src/app/              Routes: /, /new-arrivals, /bag, /account, /account/orders
+    src/components/       home, layout, sections, account, motion, ui/ProductCard
+    src/lib/              catalog data, bag and account (localStorage), siteConfig, tryOn
+    public/images/        Images used by the site
+    reference/            Design reference screenshots (not shipped)
+docs/                     Project status, decisions and the backend plan
 ```
 
-New package versions must be at least one day old (`minimumReleaseAge` in `pnpm-workspace.yaml`, a supply-chain safety setting).
+The backend will be added later as `apps/api`.
 
 ## Configuration
 
-- **WhatsApp number and social links:** `artifacts/pratyangi-fashions/src/lib/siteConfig.ts`.
-  Leave a value empty and the site shows a disabled "pending configuration" state instead of a broken link.
+- **WhatsApp number and social links:** `apps/web/src/lib/siteConfig.ts`. An empty value shows a disabled
+  "pending configuration" state instead of a broken link. These still need the real values from the business.
 - **Environment variables:** none are needed to run the UI. `NEXT_PUBLIC_API_URL` is only read by the AI try-on
-  feature, which is switched off until the backend phase. Copy secrets into a local `.env*` file — those files are git-ignored.
+  feature, which is switched off until the backend phase. Keep secrets in local `.env*` files; they are git-ignored.
 
 ## Images
 
-Static export serves images exactly as stored (Next's image optimizer is off), so file size is page weight.
-Before adding an image to `artifacts/pratyangi-fashions/public/images`:
+Static export serves images exactly as stored, so file size is page weight. Before adding an image to
+`apps/web/public/images`:
 
-- Save it as **WebP**, at most **2× the size it is displayed** (for example, a 250 px wide card needs about 500–640 px).
-- Target **under 150 KB** for a card or product photo; a full-width banner can be larger.
-- Keep PNG only when transparency is needed and WebP is not an option.
+- Save it as **WebP**, at most **2× the size it is displayed** (a 250 px wide card needs about 500–640 px).
+- Aim for **under 150 KB** for a card or product photo; a full-width banner can be larger.
 - Reference it by path, e.g. `/images/reference/product-1.webp`.
 
-Example conversion with ffmpeg: `ffmpeg -i in.png -vf "scale=640:-2" -c:v libwebp -quality 82 out.webp`.
+Example conversion: `ffmpeg -i in.png -vf "scale=640:-2" -c:v libwebp -quality 82 out.webp`.
 
 ## Deploying the frontend
 
-The build output is plain static files in `artifacts/pratyangi-fashions/out`, so any static host works
-(Vercel, Netlify, Cloudflare Pages, or Nginx on a Linux VPS).
+The build output is plain static files in `apps/web/out`, so any static host works.
 
-- **Vercel / Netlify / Cloudflare Pages:** set the root directory to `artifacts/pratyangi-fashions`,
-  the install command to `pnpm install` run from the repository root, the build command to `pnpm build`,
-  and the output directory to `out`.
-- **Nginx on a VPS (example):** upload the contents of `out/` and serve them with
-  `try_files $uri $uri.html $uri/ =404;`.
+**Vercel (for previews and, if wanted, production):**
 
-On plain static servers the browser console may show 404s for `__next.*.txt` prefetch files. They are harmless —
+1. Sign in at vercel.com with the GitHub account that can see the repository, choose **Add New → Project** and import it.
+   (An owner of the `NinjaStudios` GitHub organisation may need to approve the Vercel GitHub app.)
+2. Set **Root Directory** to `apps/web` and keep **Include source files outside of the Root Directory** enabled.
+3. Framework preset: **Next.js**. Install command: `pnpm install`. Build command: `pnpm build`. Output is `out`.
+4. Every pushed branch then gets its own preview link; `main` is the production deployment.
+
+These steps follow Vercel's standard monorepo setup and have **not been tested on this project yet**.
+
+**Nginx on a Linux server (example):** upload the contents of `apps/web/out` and serve them with
+`try_files $uri $uri.html $uri/ =404;`.
+
+On plain static servers the browser console can show 404s for `__next.*.txt` prefetch files. They are harmless;
 navigation falls back to a normal page load.
 
 ## Git workflow
 
-- `main` holds the stable version. Do work on a branch, for example `ui/<short-description>`.
-- Commit small, descriptive changes, push the branch, then open a pull request into `main`.
-
-## Backend phase (planned)
-
-Not part of the current work. The intended stack:
-
-- Express API (`artifacts/api-server` is the starting point), Node.js
-- MySQL 8 with `mysql2`
-- Plain numbered SQL upgrade scripts, applied in order and recorded in the database
-- Linux VPS hosting (Nginx in front, Express under a process manager, MySQL on the same server at first)
-
-Keep the database connection in a single `DATABASE_URL` setting and all SQL in one data layer so the database can be
-moved to a managed service later. The existing `lib/db` package (PostgreSQL/Drizzle) is a leftover that will be replaced.
+- `main` is the stable version. Do each piece of work on a branch (for example `ui/<short-description>`),
+  push it, then open a pull request into `main`.
+- Commit small, clearly described changes. Never commit passwords, API keys or `.env` files.
 
 ## Troubleshooting
 
 - **`Use pnpm instead`** — you ran `npm install` or `yarn install`. Use `pnpm install`.
-- **Port 3000 in use** — stop the other process, or run `pnpm --filter @workspace/pratyangi-fashions exec next dev --port 3001`.
-- **macOS:** `pnpm-workspace.yaml` excludes macOS build binaries (`@esbuild/darwin-*`, `@rollup/rollup-darwin-*`,
-  `lightningcss-darwin-*`) because the project was first set up on Linux. This only matters for `api-server` builds;
-  remove those `overrides` entries if you need them on a Mac.
-- **Stale build errors after deleting files** — delete `artifacts/pratyangi-fashions/.next` and run the command again.
+- **Port 3000 is busy** — stop the other process, or run `pnpm --filter pratyangi-web exec next dev --port 3001`.
+- **Stale build errors after moving or deleting files** — delete `apps/web/.next` and run the command again.
+- **The folder cannot be renamed or deleted on Windows** — close editors and terminals that have it open, then retry.
