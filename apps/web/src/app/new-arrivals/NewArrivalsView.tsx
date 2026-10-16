@@ -58,6 +58,10 @@ export function NewArrivalsView() {
   const bag = useBag();
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(true);
+  // on a phone the filters start folded so the sarees are the first thing you see
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 700px)").matches && !new URLSearchParams(window.location.search).size) setFiltersOpen(false);
+  }, []);
   const [category, setCategory] = useState<string | null>(null);
   const [priceIndex, setPriceIndex] = useState(priceStops.length - 1);
   const [selectedFabrics, setSelectedFabrics] = useState<string[]>([]);
@@ -257,9 +261,10 @@ export function NewArrivalsView() {
 
             {visible.length ? (
               <div className={styles.grid}>
-                {visible.map((product) => (
+                {visible.map((product, index) => (
                   <ProductCard
                     key={product.id}
+                    revealIndex={index}
                     id={product.id}
                     title={product.name}
                     imageSrc={product.image}

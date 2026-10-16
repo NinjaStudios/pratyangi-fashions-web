@@ -100,3 +100,37 @@ test.describe("home page polish", () => {
     await expect.poll(() => why.evaluate((element) => Number(getComputedStyle(element).opacity))).toBe(1);
   });
 });
+
+test.describe("landing and scroll animation", () => {
+  test("the landing hero plays an entrance: models start hidden and rise into place", async ({ page }) => {
+    await page.goto("/", { waitUntil: "commit" });
+    const centre = page.locator('[data-hero-model="center"] > div').first();
+    await centre.waitFor({ state: "attached" });
+    // the entrance wrapper starts transparent...
+    const early = await centre.evaluate((element) => Number(getComputedStyle(element).opacity));
+    expect(early).toBeLessThan(1);
+    // ...and has fully arrived a couple of seconds later
+    await expect.poll(() => centre.evaluate((element) => Number(getComputedStyle(element).opacity)), { timeout: 6000 }).toBe(1);
+  });
+
+  test("sections animate again when scrolled back into view (up and down)", async ({ page }) => {
+    await page.goto("/");
+    const heading = page.getByRole("heading", { name: "Best Sellers", exact: true });
+    const opacity = () => heading.evaluate((element) => Number(getComputedStyle(element).opacity));
+    await heading.evaluate((element) => element.scrollIntoView({ block: "center" }));
+    await expect.poll(opacity).toBe(1);
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+    await expect.poll(opacity, { timeout: 6000 }).toBeLessThan(1); // eased back out while off screen
+    await heading.evaluate((element) => element.scrollIntoView({ block: "center" }));
+    await expect.poll(opacity, { timeout: 6000 }).toBe(1); // and eased in again
+  });
+
+  test("the footer, offers, socials and newsletter also animate in", async ({ page }) => {
+    await page.goto("/");
+    for (const selector of ["#exclusives article", "#socials article", "#newsletter h2", "footer [class*=footerColumn]"]) {
+      const element = page.locator(selector).first();
+      await element.evaluate((node) => node.scrollIntoView({ block: "center" }));
+      await expect.poll(() => element.evaluate((node) => Number(getComputedStyle(node).opacity)), { message: selector }).toBe(1);
+    }
+  });
+});

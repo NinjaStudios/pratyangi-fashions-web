@@ -1,4 +1,8 @@
+"use client";
+
 import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion";
+import { fadeUp } from "@/lib/motion/presets";
 import { ParallaxLayer } from "@/components/motion/ParallaxLayer";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import styles from "./SocialFeed.module.css";
@@ -12,6 +16,8 @@ const feed = [
 ];
 
 export function SocialFeed() {
+  const reduceMotion = useReducedMotion();
+
   return (
     <section className={styles.section} id="socials" aria-labelledby="socials-heading">
       <ScrollReveal className={styles.inner}>
@@ -23,8 +29,8 @@ export function SocialFeed() {
           <p className={styles.aside}>From new launches to styling ideas — follow us for a closer look at our world.</p>
         </div>
         <div className={styles.grid}>
-          {feed.map((item) => (
-            <article className={styles.card} key={item.title}>
+          {feed.map((item, index) => (
+            <motion.article className={styles.card} key={item.title} {...fadeUp(reduceMotion, 0.08 + index * 0.1)}>
               <ParallaxLayer className={styles.photoLayer} range={2.5}>
                 <Image src={item.image} alt="" fill sizes="(max-width: 700px) 70vw, 19vw" className={styles.photo} />
               </ParallaxLayer>
@@ -38,7 +44,7 @@ export function SocialFeed() {
                   <Image src="/images/figma/home/social-arrow.svg" alt="" width={32} height={32} aria-hidden="true" />
                 </span>
               </div>
-            </article>
+            </motion.article>
           ))}
         </div>
       </ScrollReveal>

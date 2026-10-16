@@ -26,7 +26,8 @@ export function WhyPratyangi({ id }: { id?: string }) {
             key={benefit.title}
             initial={{ opacity: 0, y: 36 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
+            viewport={{ once: false, amount: 0.3 }}
+            whileHover={reduceMotion ? undefined : { y: -3, transition: { duration: 0.25 } }}
             transition={reduceMotion ? { duration: 0 } : { duration: 0.7, ease: easeOutExpo, delay: 0.1 + index * 0.09 }}
           >
             {/* the icon pops in a moment after its card */}
@@ -34,7 +35,7 @@ export function WhyPratyangi({ id }: { id?: string }) {
               style={{ display: "flex", width: "fit-content" }}
               initial={{ opacity: 0, scale: 0.6 }}
               whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, amount: 0.3 }}
+              viewport={{ once: false, amount: 0.3 }}
               transition={reduceMotion ? { duration: 0 } : { duration: 0.6, ease: easeOutExpo, delay: 0.3 + index * 0.09 }}
             >
               <Image src={benefit.icon} alt="" width={benefit.width} height={32} />

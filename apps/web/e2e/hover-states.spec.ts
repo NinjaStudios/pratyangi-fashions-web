@@ -57,12 +57,15 @@ test.describe("hover states", () => {
     await search.hover();
     await expect.poll(() => search.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(bg);
 
-    const offer = page.locator("[class*=offerCard]").first();
+    const offers = page.locator("[class*=offerCard]");
+    const offer = offers.first();
     await offer.evaluate((element) => element.scrollIntoView({ block: "center" }));
-    await page.waitForTimeout(800);
-    const offerY = (await offer.boundingBox())!.y;
+    await page.waitForTimeout(1200);
+    // compare with the neighbouring card, so the page scrolling a little during the hover cannot skew the result
+    const lift = async () => (await offers.nth(1).boundingBox())!.y - (await offer.boundingBox())!.y;
+    const before = await lift();
     await offer.hover();
-    await expect.poll(async () => (await offer.boundingBox())!.y).toBeLessThan(offerY - 1);
+    await expect.poll(lift).toBeGreaterThan(before + 1);
   });
 
   test("section headings ease in when scrolled to", async ({ page }) => {

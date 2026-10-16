@@ -58,13 +58,14 @@
   border-radius: 4px;
   display: flex;
   overflow-x: auto;
+  scroll-snap-type: x proximity;
 }
 
 .navItem {
   display: grid;
   align-items: center;
-  gap: 14px;
-  padding: 16px 18px;
+  gap: 10px;
+  padding: 14px 14px;
   color: #222;
   font-size: 14px;
   text-decoration: none;
