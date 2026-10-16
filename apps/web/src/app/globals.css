@@ -26,7 +26,8 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  /* Smooth scrolling is handled by SmoothScroll (Lenis); native smoothing would fight it. */
+  scroll-behavior: auto;
   scroll-padding-top: 82px;
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useReducedMotion, useTransform, type MotionValue } from "framer-motion";
+import { cubicBezier, motion, useReducedMotion, useTransform, type MotionValue } from "framer-motion";
 import { easeOutExpo } from "@/lib/motion/presets";
 import { HERO_HEIGHT, HERO_WIDTH, heroModels, heroStage, type HeroModel } from "./heroLayers";
 import styles from "./Hero.module.css";
@@ -11,14 +11,17 @@ type HeroProps = {
   coverProgress: MotionValue<number>;
 };
 
+// Soft start and soft finish, so the models ease into and out of their drift instead of moving at a constant rate.
+const soft = cubicBezier(0.45, 0, 0.2, 1);
+
 const pct = (value: number, total: number) => `${(value / total) * 100}%`;
 
 function HeroModelLayer({ model, progress, still }: { model: HeroModel; progress: MotionValue<number>; still: boolean }) {
   // Sideways drift is a percentage of the model's own width, so it scales with the artboard.
   const travel = still ? 0 : (model.travel / model.width) * 100;
-  const x = useTransform(progress, [0, 1], ["0%", `${travel}%`]);
+  const x = useTransform(progress, [0, 1], ["0%", `${travel}%`], { ease: soft });
   const fade = model.fade;
-  const opacity = useTransform(progress, fade ? [fade.from, fade.to] : [0, 1], [1, fade && !still ? fade.end : 1]);
+  const opacity = useTransform(progress, fade ? [fade.from, fade.to] : [0, 1], [1, fade && !still ? fade.end : 1], { ease: soft });
 
   return (
     <motion.div
@@ -48,7 +51,7 @@ export function Hero({ coverProgress }: HeroProps) {
   //  - the centre model fades out,
   //  - the side models drift outward (left ones left, right ones right) and slip behind the category section.
   // With reduced motion the values stay flat (same markup, so server and client render the same).
-  const stageOpacity = useTransform(coverProgress, [0.25, 1], [1, reduceMotion ? 1 : 0.6]);
+  const stageOpacity = useTransform(coverProgress, [0.25, 1], [1, reduceMotion ? 1 : 0.6], { ease: soft });
 
   return (
     <motion.section

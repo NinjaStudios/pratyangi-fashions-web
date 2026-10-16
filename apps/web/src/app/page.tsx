@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import Image from "next/image";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform, cubicBezier } from "framer-motion";
 import { ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
 import { Hero } from "@/components/home/Hero/Hero";
 import { SocialFeed } from "@/components/home/SocialFeed/SocialFeed";
@@ -64,7 +64,7 @@ export default function HomePage() {
     const heroHeight = categoryRef.current?.offsetTop ?? 0;
     return heroHeight > 0 ? Math.min(1, Math.max(0, y / heroHeight)) : 0;
   });
-  const headingOpacity = useTransform(coverProgress, [0.05, 0.45], [reduceMotion ? 1 : 0, 1]);
+  const headingOpacity = useTransform(coverProgress, [0.05, 0.45], [reduceMotion ? 1 : 0, 1], { ease: cubicBezier(0.25, 0.1, 0.25, 1) });
   // A soft blur only while the section overlaps the hero; it is gone before the section settles (never permanent).
   const headingBlur = useTransform(coverProgress, [0.1, 0.35, 0.8], [0, reduceMotion ? 0 : 2.5, 0]);
   const headingFilter = useTransform(headingBlur, (value) => (value > 0.05 ? `blur(${value}px)` : "none"));

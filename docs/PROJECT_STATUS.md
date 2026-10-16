@@ -119,3 +119,7 @@ confirm the tests fail when the behaviour regresses.
 
 Not automated (checked by hand during development): layouts at eight widths from 320 px to 1920 px, page weight and
 layout shift, and before/after screenshot comparison when images changed.
+
+## Smooth scrolling
+
+Mouse-wheel and trackpad scrolling is eased site-wide by Lenis (`apps/web/src/components/layout/SmoothScroll/SmoothScroll.tsx`, mounted in `app/layout.tsx`). It only eases the scroll position, so every scroll-linked animation follows it. Touch scrolling stays native, it is off when the visitor prefers reduced motion, and its frame loop sleeps when the page is idle. Tuning: `lerp` (lower = floatier, higher = snappier). Hero movement uses a soft ease-in-out curve (`soft` in `Hero.tsx`).
