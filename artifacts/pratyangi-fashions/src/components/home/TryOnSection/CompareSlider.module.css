@@ -1,0 +1,97 @@
+.compare {
+  --split: 50%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #e8e2d8;
+  user-select: none;
+  touch-action: pan-y;
+}
+
+.after,
+.before {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  pointer-events: none;
+}
+
+.before {
+  clip-path: inset(0 calc(100% - var(--split)) 0 0);
+}
+
+.pill {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  height: 27px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 500px;
+  background: #f7f4f4;
+  color: #000;
+  font: 400 10px/1 var(--font-body);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.pillBefore {
+  left: 12px;
+}
+
+.pillAfter {
+  left: calc(var(--split) + 12px);
+}
+
+.divider {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  bottom: 0;
+  left: var(--split);
+  width: 2px;
+  margin-left: -1px;
+  background: #fff;
+  pointer-events: none;
+}
+
+.handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 32px;
+  height: 32px;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  border-radius: 500px;
+  background: #fff;
+  box-shadow: 0 2px 8px #0000002e;
+}
+
+.range {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: ew-resize;
+}
+
+.compare:has(.range:focus-visible) .handle {
+  outline: 2px solid var(--wine);
+  outline-offset: 2px;
+}
+
+.action {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  right: min(calc(100% - var(--split) + 12px), calc(100% - 51px));
+}

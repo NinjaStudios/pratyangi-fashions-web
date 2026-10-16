@@ -1,0 +1,160 @@
+.page {
+  overflow-x: clip;
+  background: #faf7f2;
+}
+
+.announcement {
+  min-height: 40px;
+  padding: 0 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background: var(--burgundy);
+  color: #fff;
+  font-size: 14px;
+}
+
+.announcement p {
+  margin: 0;
+}
+
+.main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 56px 24px 72px;
+}
+
+.heading h1 {
+  margin: 0;
+  color: #b77001;
+  font: 600 32px/1.2 var(--font-display);
+}
+
+.heading p {
+  margin: 4px 0 0;
+  color: var(--burgundy);
+  font-size: 14px;
+}
+
+.layout {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.sidebar {
+  display: grid;
+  gap: 24px;
+}
+
+.sidebar nav {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #eadfc8;
+  border-radius: 4px;
+}
+
+.navItem {
+  display: grid;
+  grid-template-columns: 18px 1fr 14px;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  color: #222;
+  font-size: 14px;
+  text-decoration: none;
+  border-bottom: 1px solid #f1e9d8;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.navItem:last-child {
+  border-bottom: 0;
+}
+
+a.navItem:hover {
+  background: #fbf3e4;
+}
+
+.navActive,
+a.navActive:hover {
+  background: var(--burgundy);
+  color: #fff;
+}
+
+.navDisabled {
+  color: #8a8478;
+  cursor: not-allowed;
+}
+
+.logout {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid #d79aa6;
+  border-radius: 4px;
+  background: #fff;
+  color: var(--burgundy);
+  font-size: 14px;
+}
+
+.logout:disabled {
+  cursor: not-allowed;
+  opacity: .75;
+}
+
+.content {
+  min-width: 0;
+}
+
+.demoNote {
+  margin: 40px 0 0;
+  color: #8a8478;
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 960px) {
+  .announcement {
+    padding: 0 20px;
+  }
+
+  .announcementLinks {
+    display: none;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar nav {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .navItem {
+    flex: none;
+    grid-template-columns: 18px auto;
+    border-bottom: 0;
+    border-right: 1px solid #f1e9d8;
+    white-space: nowrap;
+  }
+
+  .navItem svg:last-child {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .main {
+    padding: 36px 16px 56px;
+  }
+
+  .heading h1 {
+    font-size: 26px;
+  }
+}
