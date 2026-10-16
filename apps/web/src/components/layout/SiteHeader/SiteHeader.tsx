@@ -4,9 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronDown, ChevronRight, Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Menu, Search, UserRound, X } from "lucide-react";
 import { easeOutExpo } from "@/lib/motion/presets";
 import styles from "./SiteHeader.module.css";
+
+// Solid shopping bag with its handle, matching the original design (the icon library's filled bag loses the handle).
+function BagIcon() {
+  return (
+    <svg width="24" height="28" viewBox="0 0 24 28" aria-hidden="true" focusable="false">
+      <rect x="0" y="8" width="24" height="20" rx="2.5" fill="currentColor" />
+      <path d="M6.6 11V7.2a5.4 5.4 0 0 1 10.8 0V11" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 const menuLinks = [
   { label: "Shop by Category", href: "/#categories" },
@@ -93,7 +103,7 @@ export function SiteHeader({ bagCount }: SiteHeaderProps) {
           </button>
           <Link className={styles.brand} href="/" aria-label="Pratyangi Fashions home">
             <span className={styles.brandLogo}>
-              <Image src="/images/reference/brand-logo.webp" alt="" width={61} height={61} priority />
+              <Image src="/images/reference/brand-emblem.webp" alt="" width={58} height={58} priority />
             </span>
             <span className={styles.brandText}>
               <span className={styles.brandName}>PRATYANGI FASHIONS</span>
@@ -105,7 +115,7 @@ export function SiteHeader({ bagCount }: SiteHeaderProps) {
               <span>Search</span><Search size={17} />
             </button>
             <Link className={styles.iconButton} href="/bag" aria-label={`Open your bag, ${bagCount} items`}>
-              <ShoppingBag size={21} fill="currentColor" /><span className={styles.count}>{bagCount}</span>
+              <BagIcon /><span className={styles.count}>{bagCount}</span>
             </Link>
             <Link className={styles.iconButton} href="/account" aria-label="My account">
               <UserRound size={22} fill="currentColor" />

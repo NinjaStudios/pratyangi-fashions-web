@@ -6,7 +6,7 @@ import { easeOutExpo } from "@/lib/motion/presets";
 import styles from "./Hero.module.css";
 
 type HeroProps = {
-  /** 0 when Shop by Category starts entering the viewport, 1 when it has fully covered the hero. */
+  /** 0 at the top of the page, 1 once Shop by Category has fully covered the hero. */
   coverProgress: MotionValue<number>;
 };
 
@@ -14,10 +14,8 @@ export function Hero({ coverProgress }: HeroProps) {
   const reduceMotion = useReducedMotion();
 
   // The hero stays pinned (sticky, see Hero.module.css) while the sections after it scroll up over it. As it is
-  // covered it recedes: a little blur and dimming tied to the same scroll progress, so the effect reverses
-  // exactly when scrolling back up. Same style shape with or without reduced motion (values stay flat).
-  const stageBlur = useTransform(coverProgress, [0.25, 1], [0, reduceMotion ? 0 : 4]);
-  const stageFilter = useTransform(stageBlur, (value) => (value > 0.05 ? `blur(${value}px)` : "none"));
+  // covered it recedes: a gentle dim tied to the same scroll progress, so it reverses exactly when scrolling back up.
+  // Same style shape with or without reduced motion (the value just stays at 1).
   const stageOpacity = useTransform(coverProgress, [0.25, 1], [1, reduceMotion ? 1 : 0.6]);
 
   return (
@@ -29,7 +27,7 @@ export function Hero({ coverProgress }: HeroProps) {
       animate={{ opacity: 1 }}
       transition={reduceMotion ? { duration: 0 } : { duration: 0.55, ease: easeOutExpo }}
     >
-      <motion.div className={styles.stage} style={{ filter: stageFilter, opacity: stageOpacity }}>
+      <motion.div className={styles.stage} style={{ opacity: stageOpacity }}>
         <Image
           src="/images/reference/hero-showroom-figma.webp"
           alt="Seven models in traditional sarees on a maroon showroom stage with gold plinths and a central white pedestal"

@@ -57,15 +57,14 @@ export default function HomePage() {
   const categoryRef = useRef<HTMLElement>(null);
   // The hero is pinned, so the category section covers it by exactly the distance scrolled. Progress is that
   // distance over the hero's height (the category's offsetTop inside the layered wrapper): 0 at the top of the page,
-  // 1 once the hero is fully covered. It drives the hero's recede and the heading's soft focus.
+  // 1 once the hero is fully covered. It dims the hero as it recedes and fades in the "Shop by Category" strip:
+  // the heading is not shown at rest and appears only as the page is scrolled (no blur anywhere).
   const { scrollY } = useScroll();
   const coverProgress = useTransform(scrollY, (y) => {
     const heroHeight = categoryRef.current?.offsetTop ?? 0;
     return heroHeight > 0 ? Math.min(1, Math.max(0, y / heroHeight)) : 0;
   });
-  const headingBlur = useTransform(coverProgress, [0.25, 0.5, 0.8], [0, reduceMotion ? 0 : 2.5, 0]);
-  const headingFilter = useTransform(headingBlur, (value) => (value > 0.05 ? `blur(${value}px)` : "none"));
-  const headingOpacity = useTransform(coverProgress, [0.25, 0.5, 0.8], [1, reduceMotion ? 1 : 0.7, 1]);
+  const headingOpacity = useTransform(coverProgress, [0.05, 0.45], [reduceMotion ? 1 : 0, 1]);
   const [categoryScroll, setCategoryScroll] = useState({ atStart: true, atEnd: false });
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterMessage, setNewsletterMessage] = useState("");
@@ -123,7 +122,7 @@ export default function HomePage() {
       <Hero coverProgress={coverProgress} />
 
       <section className={styles.categorySection} id="categories" aria-label="Shop by category" ref={categoryRef}>
-          <motion.div className={styles.categoryHeading} style={{ filter: headingFilter, opacity: headingOpacity }}>
+          <motion.div className={styles.categoryHeading} style={{ opacity: headingOpacity }}>
             <h1>Shop by Category</h1>
           </motion.div>
           <div className={styles.categoryBand}>
