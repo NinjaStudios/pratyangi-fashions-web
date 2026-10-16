@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { SiteFooter } from "@/components/layout/SiteFooter/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader/SiteHeader";
 import { ProductCard } from "@/components/ui/ProductCard/ProductCard";
@@ -37,6 +38,20 @@ function pageList(current: number, total: number): (number | "gap")[] {
   if (current <= 4) return [1, 2, 3, 4, 5, "gap", total];
   if (current >= total - 3) return [1, "gap", total - 4, total - 3, total - 2, total - 1, total];
   return [1, "gap", current - 1, current, current + 1, "gap", total];
+}
+
+/** Applies ?fabric=…&occasion=… from the link (search dialog, Shop menu) to the filters. Renders nothing. */
+function FiltersFromLink({ onApply }: { onApply: (fabricsFromLink: string[], occasionsFromLink: string[]) => void }) {
+  const params = useSearchParams();
+  const key = params.toString();
+  useEffect(() => {
+    onApply(
+      params.getAll("fabric").filter((name) => fabrics.includes(name)),
+      params.getAll("occasion").filter((name) => occasions.includes(name)),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  return null;
 }
 
 export function NewArrivalsView() {
@@ -73,6 +88,14 @@ export function NewArrivalsView() {
 
   const update = <T,>(setter: (value: T) => void) => (value: T) => { setter(value); setPage(1); };
 
+  const applyLinkFilters = (fabricsFromLink: string[], occasionsFromLink: string[]) => {
+    setSelectedFabrics(fabricsFromLink);
+    setSelectedOccasions(occasionsFromLink);
+    setPage(1);
+    if (fabricsFromLink.some((name) => fabrics.indexOf(name) >= 5)) setShowAllFabrics(true);
+    if (fabricsFromLink.length || occasionsFromLink.length) setFiltersOpen(true);
+  };
+
   const clearFilters = () => {
     setCategory(null);
     setPriceIndex(priceStops.length - 1);
@@ -96,6 +119,9 @@ export function NewArrivalsView() {
   return (
     <main className={styles.page}>
       <SiteHeader bagCount={bag.count} />
+      <Suspense fallback={null}>
+        <FiltersFromLink onApply={applyLinkFilters} />
+      </Suspense>
 
       <div className={styles.catalog}>
         <nav className={styles.breadcrumb} aria-label="Breadcrumb">

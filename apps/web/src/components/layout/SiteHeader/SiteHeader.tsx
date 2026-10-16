@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronDown, ChevronRight, Search, UserRound, X } from "lucide-react";
+import { catalogLink, fabricAliases, fabrics } from "@/lib/catalog";
 import { easeOutExpo } from "@/lib/motion/presets";
 import styles from "./SiteHeader.module.css";
 
@@ -20,9 +21,21 @@ function BagIcon() {
 
 // The Shop mega menu (from the Figma nav bar). Every link goes to the catalogue until category pages exist.
 const menuGroups = [
-  { title: "WOMEN", links: ["Half Sarees", "Uppada", "Banarasi", "Kanchipuram Patti", "Dharmavaram", "Soft Silk", "Bridal Sarees", "Gadwal"] },
-  { title: "MEN", links: ["Men’s Ethnic Wear"] },
-  { title: "JEWELLERY", links: ["Jewellery", "Accessories"] },
+  {
+    title: "WOMEN",
+    links: [
+      { label: "Half Sarees", href: catalogLink({}) },
+      { label: "Uppada", href: catalogLink({ fabric: "Uppada Pattu Saree" }) },
+      { label: "Banarasi", href: catalogLink({ fabric: "Banarasi Saree" }) },
+      { label: "Kanchipuram Patti", href: catalogLink({ fabric: "Kanchi Pattu Saree" }) },
+      { label: "Dharmavaram", href: catalogLink({ fabric: "Dharmavaram Saree" }) },
+      { label: "Soft Silk", href: catalogLink({ fabric: "Bangalore Silk Saree" }) },
+      { label: "Bridal Sarees", href: catalogLink({ occasion: "Wedding" }) },
+      { label: "Gadwal", href: catalogLink({}) },
+    ],
+  },
+  { title: "MEN", links: [{ label: "Men’s Ethnic Wear", href: catalogLink({}) }] },
+  { title: "JEWELLERY", links: [{ label: "Jewellery", href: catalogLink({}) }, { label: "Accessories", href: catalogLink({}) }] },
 ];
 
 // Hamburger that turns into a cross: the outer bars rotate into an X and the middle bar fades out.
@@ -34,16 +47,15 @@ function MenuIcon({ open }: { open: boolean }) {
   );
 }
 
-const defaultSearchEntries = [
-  { label: "New Arrivals", href: "/new-arrivals" },
-  { label: "Uppada", href: "/new-arrivals" },
-  { label: "Banarasi", href: "/new-arrivals" },
-  { label: "Kanchipuram Pattu", href: "/new-arrivals" },
-  { label: "Dharmavaram", href: "/new-arrivals" },
-  { label: "Soft Silk", href: "/new-arrivals" },
-  { label: "Bridal Sarees", href: "/new-arrivals" },
-  { label: "Wedding Collection", href: "/#arrivals" },
-  { label: "Festive Collections", href: "/#arrivals" },
+type SearchEntry = { label: string; href: string; keywords?: string[] };
+
+// Picking a fabric opens New Arrivals with that fabric ticked in the filters and only those sarees listed.
+const defaultSearchEntries: SearchEntry[] = [
+  { label: "New Arrivals", href: catalogLink({}) },
+  ...fabrics.map((fabric) => ({ label: fabric, href: catalogLink({ fabric }), keywords: fabricAliases[fabric] })),
+  { label: "Bridal Sarees", href: catalogLink({ occasion: "Wedding" }), keywords: ["bridal", "wedding"] },
+  { label: "Wedding Collection", href: catalogLink({ occasion: "Wedding" }) },
+  { label: "Festive Collections", href: catalogLink({ occasion: "Festive" }), keywords: ["festival"] },
   { label: "Best Sellers", href: "/#arrivals" },
 ];
 
@@ -58,7 +70,7 @@ export function SiteHeader({ bagCount }: SiteHeaderProps) {
   const [query, setQuery] = useState("");
 
   const term = query.trim().toLowerCase();
-  const results = term ? defaultSearchEntries.filter((entry) => entry.label.toLowerCase().includes(term)) : defaultSearchEntries;
+  const results = term ? defaultSearchEntries.filter((entry) => [entry.label, ...(entry.keywords ?? [])].some((text) => text.toLowerCase().includes(term))) : defaultSearchEntries;
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const closePanel = () => {
@@ -153,8 +165,8 @@ export function SiteHeader({ bagCount }: SiteHeaderProps) {
                   >
                     <h2>{group.title}</h2>
                     <ul>
-                      {group.links.map((label) => (
-                        <li key={label}><Link href="/new-arrivals" onClick={() => setMenuOpen(false)}>{label}</Link></li>
+                      {group.links.map((link) => (
+                        <li key={link.label}><Link href={link.href} onClick={() => setMenuOpen(false)}>{link.label}</Link></li>
                       ))}
                     </ul>
                   </motion.div>

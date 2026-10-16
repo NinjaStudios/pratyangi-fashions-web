@@ -97,12 +97,12 @@
 }
 
 .platform {
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: rgba(20, 13, 10, .6);
+  background: #2d1a10;
   margin-bottom: 18px;
 }
 
@@ -118,6 +118,10 @@
   font: 400 22px/1.1 var(--font-display);
   opacity: .9;
   font-size: 19px;
+}
+
+.arrow img {
+  transform: rotate(180deg);
 }
 
 .arrow {
