@@ -154,3 +154,12 @@ The six gold plinths are no longer part of `stage.webp`; each is its own image (
 - **Join our world** text and the **Why Pratyangi Fashions** cards/icons now animate in as they are scrolled to.
 - **Latest from our socials:** icons are drawn at their real Figma sizes (the Facebook "f" and YouTube logo were being stretched) in a 48px chip, with the Figma arrow.
 - Tests: `e2e/polish.spec.ts`.
+
+## Phone responsiveness round
+
+- Header: bag, account and search icons have matching visual weight and 40px+ tap targets.
+- Home: category carousel cards and the "Loved by our Customers" cards are smaller on phones; "Be a part of our story" stacks with gold bars.
+- /bag: lighter item cards (smaller photo, compact quantity stepper, wishlist/remove on one line each).
+- New Arrivals: filters start folded on phones (they stay open when you arrive from a search/menu fabric link).
+- Account: recent-order rows no longer overlap; tab bar is tighter.
+- `e2e/responsive.spec.ts` checks all six pages at ten widths (320–1280px) for anything wider than the screen.
