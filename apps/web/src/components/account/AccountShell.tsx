@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   Bell, ChevronRight, CreditCard, Crown, Headset, Heart, House, LogOut, MapPin, Package, Star,
@@ -9,6 +10,7 @@ import {
 } from "lucide-react";
 import { SiteFooter } from "@/components/layout/SiteFooter/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader/SiteHeader";
+import { signOutUser, useSession } from "@/lib/auth";
 import { useBag } from "@/lib/bag";
 import { easeOutExpo } from "@/lib/motion/presets";
 import styles from "./AccountShell.module.css";
@@ -40,6 +42,8 @@ type AccountShellProps = {
 
 export function AccountShell({ active, title, subtitle, headerActions, children }: AccountShellProps) {
   const bag = useBag();
+  const router = useRouter();
+  const { user } = useSession();
   const reduceMotion = useReducedMotion();
   // sidebar rows slide in one after another; the same hidden state with or without reduced motion
   const row = (index: number) => ({
@@ -92,9 +96,13 @@ export function AccountShell({ active, title, subtitle, headerActions, children 
                 );
               })}
             </nav>
-            <button type="button" className={styles.logout} disabled title="Sign-in is not connected in this demo">
-              <LogOut size={16} aria-hidden="true" />Logout
-            </button>
+            {user ? (
+              <button type="button" className={styles.logout} onClick={async () => { await signOutUser(); router.push("/"); }}>
+                <LogOut size={16} aria-hidden="true" />Logout
+              </button>
+            ) : (
+              <Link href="/login?next=/account" className={styles.logout}>Sign in to your account</Link>
+            )}
           </aside>
           <section className={styles.content}>{children}</section>
         </div>

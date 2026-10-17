@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronDown, ChevronRight, Search, UserRound, X } from "lucide-react";
+import { useSession } from "@/lib/auth";
 import { catalogLink, fabricAliases, fabrics } from "@/lib/catalog";
 import { easeOutExpo } from "@/lib/motion/presets";
 import styles from "./SiteHeader.module.css";
@@ -65,6 +66,7 @@ type SiteHeaderProps = {
 
 export function SiteHeader({ bagCount }: SiteHeaderProps) {
   const reduceMotion = useReducedMotion();
+  const { user } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const [panel, setPanel] = useState<"search" | null>(null);
   const [query, setQuery] = useState("");
@@ -137,7 +139,7 @@ export function SiteHeader({ bagCount }: SiteHeaderProps) {
             <Link className={styles.iconButton} href="/bag" aria-label={`Open your bag, ${bagCount} items`}>
               <BagIcon /><span className={styles.count}>{bagCount}</span>
             </Link>
-            <Link className={styles.iconButton} href="/account" aria-label="My account">
+            <Link className={styles.iconButton} href={user ? "/account" : "/login"} aria-label={user ? "My account" : "Sign in"}>
               <UserRound size={22} fill="currentColor" />
             </Link>
           </div>

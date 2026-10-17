@@ -181,3 +181,11 @@ The six gold plinths are no longer part of `stage.webp`; each is its own image (
 - **Checkout:** checked against the frame. A coupon applied in the bag now carries over to checkout (the Figma frame shows a discount applied).
 - **Address dialog:** built to the design supplied by the designer (two panes: "My Addresses" with radio choice, Default badge, Edit and a ⋮ menu for Set as default / Delete, and the "Add new Address" form with Home / Office / Other cards, +91 phone, Check Pincode (demo: a few known pincodes fill city and state), State list, optional label such as "PG", and Set as default). Opens from Add New Address and Edit; one column bottom sheet on phones. Component: `components/checkout/AddressDialog.tsx`.
 - **Animations in Figma:** none are defined on these frames (the motion data is empty), so the motion follows the rest of the site.
+
+## Sign in and create account
+
+- New pages `/login` and `/signup` in the site's own look (brand panel with perks on desktop, one card on phones), with "Continue with Google", show/hide password, password strength meter and rules, field checks, neutral error for wrong password, success animation and `?next=` return (same-site only).
+- The header account icon goes to `/login` when signed out and `/account` when signed in; the account page greets the signed-in name and Logout works.
+- Behind it: `apps/web/src/lib/auth/` (`AuthClient` interface, demo implementation for now, API implementation ready; contract and the Google setup steps are in `docs/BACKEND_PLAN.md`). Settings go in `apps/web/.env.local` (see `.env.example`): `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
+- Not in the Figma file: these two screens follow the checkout/account look and should be shown to the designer.
+- Still to build: password reset, email/phone verification, and the real API.

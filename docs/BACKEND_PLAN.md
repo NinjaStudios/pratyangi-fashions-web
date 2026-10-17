@@ -73,3 +73,43 @@ Keep each script small, because MySQL cannot roll back most schema changes.
 3. Add users, products and orders tables, then connect the storefront's bag and account pages to the API.
 4. Add payments last, behind a hosted gateway, in a test mode first.
 5. Turn on backups and monitoring before any real customer data is stored.
+
+## Accounts and sign-in (what the website already expects)
+
+The sign-in and sign-up pages (`/login`, `/signup`) are finished on the website side. Until the API exists they run on an
+in-browser **demo** (accounts kept only in that browser). Setting `NEXT_PUBLIC_API_URL` in `apps/web/.env.local` switches the
+site to the real API with no other code change: `apps/web/src/lib/auth/` has one interface (`AuthClient`) with a demo and an API
+implementation.
+
+### API contract the website calls
+
+All requests send JSON and use `credentials: "include"`, so the session lives in an `httpOnly`, `Secure`, `SameSite` cookie set by
+the server (the website never stores a token).
+
+| Method and path | Body | Success | Failure (JSON `{ message, field? }`) |
+| --- | --- | --- | --- |
+| `POST /auth/signup` | `{ name, email, phone, password }` | `201 { user }` and session cookie | `409` email already used (`field: "email"`), `422` invalid input |
+| `POST /auth/login` | `{ email, password }` | `200 { user }` and session cookie | `401` with one neutral message ("The email or password is incorrect.") |
+| `POST /auth/google` | `{ credential }` (Google ID token) | `200 { user }` and session cookie | `401` token invalid |
+| `POST /auth/logout` | none | `204` and cookie cleared | none |
+| `GET /auth/me` | none | `200 { user }` | `401` when signed out |
+
+`user` is `{ id, name, email, provider: "password" | "google", picture? }`.
+
+Server rules: validate every field again with Zod (the browser checks are only for convenience); hash passwords with Argon2 or
+bcrypt; rate-limit login, signup and Google routes; never say whether an email exists on login; CORS allows only the website's
+address; CSRF protection on every state-changing route. For Google: verify the ID token with Google's library
+(`google-auth-library`, `verifyIdToken` with your client ID as the audience), accept only `email_verified: true`, and link by email.
+
+### Sign in with Google (one-time setup, by the account owner)
+
+1. Open https://console.cloud.google.com, create (or pick) a project for Pratyangi Fashions.
+2. "APIs & Services" → "OAuth consent screen": choose External, fill the app name, support email and logo, add your domain, publish.
+3. "Credentials" → "Create credentials" → "OAuth client ID" → type "Web application".
+4. Under "Authorised JavaScript origins" add `http://localhost:3000` (for testing) and the live website address
+   (for example `https://pratyangi-fashions-web.vercel.app` and the final domain). No redirect URI is needed for this button.
+5. Copy the client ID (ends in `.apps.googleusercontent.com`) into `apps/web/.env.local` as `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, and on
+   Vercel under Project → Settings → Environment Variables. The same client ID goes into the API's settings for token checks.
+
+Until a client ID is set the Google button is shown and explains it is not switched on yet. With an ID set, Google draws its
+official button, and in demo mode the site signs the visitor in from the (unverified) token, only for local review.

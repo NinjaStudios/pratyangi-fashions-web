@@ -3,7 +3,7 @@ import { scrollThrough } from "./helpers";
 
 // Every page must fit every phone / tablet / laptop width: nothing wider than the screen, header icons comfortable to tap.
 const widths = [320, 360, 375, 414, 480, 600, 768, 900, 1024, 1280];
-const pages = ["/", "/new-arrivals", "/bag", "/checkout", "/account", "/account/orders"];
+const pages = ["/", "/new-arrivals", "/bag", "/checkout", "/account", "/account/orders", "/login", "/signup"];
 
 test.describe.configure({ mode: "parallel" });
 test.skip(({ isMobile }) => isMobile, "widths are set by the test itself; the desktop project covers them");
@@ -44,7 +44,7 @@ test("header icons are the same weight and comfortable to tap on a phone", async
   await page.goto("/");
   await page.waitForTimeout(900); // the header slides in on load; measure once it has settled
   const bag = (await page.getByRole("link", { name: /Open your bag/ }).boundingBox())!;
-  const account = (await page.getByRole("link", { name: "My account" }).boundingBox())!;
+  const account = (await page.getByRole("link", { name: /My account|Sign in/ }).boundingBox())!;
   const search = (await page.getByRole("button", { name: "Search catalog" }).boundingBox())!;
   for (const target of [bag, account, search]) {
     expect(target.height).toBeGreaterThanOrEqual(40);
@@ -52,7 +52,7 @@ test("header icons are the same weight and comfortable to tap on a phone", async
   }
   const glyph = (name: string | RegExp, role: "link" | "button") =>
     page.getByRole(role, { name }).locator("svg").first().evaluate((svg) => svg.getBoundingClientRect().width);
-  const sizes = [await glyph(/Open your bag/, "link"), await glyph("My account", "link"), await glyph("Search catalog", "button")];
+  const sizes = [await glyph(/Open your bag/, "link"), await glyph(/My account|Sign in/, "link"), await glyph("Search catalog", "button")];
   expect(Math.max(...sizes) - Math.min(...sizes)).toBeLessThanOrEqual(10);
 });
 

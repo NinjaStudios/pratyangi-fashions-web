@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronRight, Crown, Heart, MapPin, Package } from "lucide-react";
 import { ProductCard } from "@/components/ui/ProductCard/ProductCard";
 import { demoOrders, demoProfile } from "@/lib/account";
+import { useSession } from "@/lib/auth";
 import { useBag } from "@/lib/bag";
 import { homeProducts } from "@/lib/catalog";
 import { AccountShell } from "./AccountShell";
@@ -12,6 +13,7 @@ import styles from "./AccountPages.module.css";
 
 export function AccountOverview() {
   const bag = useBag();
+  const { user } = useSession();
   const recent = demoOrders.slice(0, 3);
 
   return (
@@ -22,7 +24,7 @@ export function AccountOverview() {
           <Image src={demoProfile.avatar} alt="" fill sizes="88px" style={{ objectFit: "cover", objectPosition: "center top" }} />
         </span>
         <div>
-          <h2>Hello, {demoProfile.name}</h2>
+          <h2>Hello, {user ? user.name.split(" ")[0] : demoProfile.name}</h2>
           <p>Welcome to Pratyangi Fashions</p>
           <div className={styles.profileMeta}>
             <span className={styles.tier}>{demoProfile.tier}</span>
