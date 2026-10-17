@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, BadgeCheck, Check, ChevronDown, CreditCard, Info, LockKeyhole, MapPin, Pencil, ShieldCheck, Ticket, Trash2, Truck } from "lucide-react";
 import { AddressDialog } from "@/components/checkout/AddressDialog";
 import { SiteFooter } from "@/components/layout/SiteFooter/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader/SiteHeader";
+import { useSession } from "@/lib/auth";
 import { useBag } from "@/lib/bag";
 import { findProduct, formatInr } from "@/lib/catalog";
 import { addressLines, coupons, deliveryOptions, demoAddresses, type SavedAddress } from "@/lib/checkout";
@@ -26,6 +28,8 @@ const paymentMethods = [
 
 export function CheckoutView() {
   const bag = useBag();
+  const router = useRouter();
+  const session = useSession();
   const reduceMotion = useReducedMotion();
   const [addresses, setAddresses] = useState<SavedAddress[]>(demoAddresses);
   const [addressId, setAddressId] = useState(demoAddresses[0].id);
@@ -38,6 +42,11 @@ export function CheckoutView() {
   const [status, setStatus] = useState("");
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [paymentId, setPaymentId] = useState("upi");
+
+  // checkout needs an account: signed-out visitors go to sign in and come straight back
+  useEffect(() => {
+    if (session.ready && !session.user) router.replace("/login?next=/checkout");
+  }, [session.ready, session.user, router]);
 
   const items = bag.lines.flatMap((line) => {
     const product = findProduct(line.id);

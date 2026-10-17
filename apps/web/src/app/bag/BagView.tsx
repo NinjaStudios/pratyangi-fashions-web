@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader/SiteHeader";
 import { WhyPratyangi } from "@/components/sections/WhyPratyangi/WhyPratyangi";
 import { ProductCard } from "@/components/ui/ProductCard/ProductCard";
+import { useSession } from "@/lib/auth";
 import { useBag } from "@/lib/bag";
 import { coupons, freeShippingThreshold } from "@/lib/checkout";
 import { discountPercent, findProduct, formatInr, homeProducts } from "@/lib/catalog";
@@ -17,6 +18,7 @@ const shippingFee = 99;
 
 export function BagView() {
   const bag = useBag();
+  const session = useSession();
   const [couponOpen, setCouponOpen] = useState(true);
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
@@ -146,7 +148,7 @@ export function BagView() {
               <hr />
               <div className={styles.total}><span>Total Amount</span><strong>{formatInr(total)}</strong></div>
               {items.length ? (
-                <Link className={styles.checkout} href="/checkout">
+                <Link className={styles.checkout} href={session.ready && !session.user ? "/login?next=/checkout" : "/checkout"}>
                   Proceed to Checkout
                   <Image src="/images/figma/checkout-arrow.svg" alt="" width={27} height={27} />
                 </Link>

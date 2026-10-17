@@ -18,6 +18,7 @@ type Errors = Partial<Record<"name" | "email" | "phone" | "password" | "confirm"
 
 export function SignupView() {
   const router = useRouter();
+  const [fromCheckout, setFromCheckout] = useState(false);
   const form = useRef<HTMLFormElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [values, setValues] = useState({ name: "", email: "", phone: "", password: "", confirm: "" });
@@ -28,7 +29,10 @@ export function SignupView() {
   const [busy, setBusy] = useState(false);
   const [welcome, setWelcome] = useState<AuthUser | null>(null);
 
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => {
+    setFromCheckout(new URLSearchParams(window.location.search).get("next") === "/checkout");
+    return () => clearTimeout(timer.current);
+  }, []);
 
   const set = (key: keyof typeof values) => (event: { target: { value: string } }) => {
     setValues((current) => ({ ...current, [key]: event.target.value }));
@@ -102,7 +106,7 @@ export function SignupView() {
       ) : (
         <>
           <h1 className={styles.title}>Create your account</h1>
-          <p className={styles.lead}>Join Pratyangi Fashions for faster checkout, order tracking and AI try-on.</p>
+          <p className={styles.lead}>{fromCheckout ? "Create an account to continue to checkout. Your bag is saved." : "Join Pratyangi Fashions for faster checkout, order tracking and AI try-on."}</p>
 
           <GoogleButton text="signup_with" clientId={googleClientId} disabled={busy} onCredential={onGoogle} onUnavailable={setNotice} />
           <div className={styles.divider}>or sign up with email</div>
@@ -135,7 +139,7 @@ export function SignupView() {
             </button>
           </form>
 
-          <p className={styles.switch}>Already have an account? <Link href="/login">Sign in</Link></p>
+          <p className={styles.switch}>Already have an account? <Link href={fromCheckout ? "/login?next=/checkout" : "/login"}>Sign in</Link></p>
           {authMode === "demo" && <p className={styles.demoNote}>Demo mode: accounts are kept only in this browser until the store server is connected.</p>}
         </>
       )}

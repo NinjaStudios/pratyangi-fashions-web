@@ -13,6 +13,7 @@ import styles from "@/components/auth/Auth.module.css";
 
 export function LoginView() {
   const router = useRouter();
+  const [fromCheckout, setFromCheckout] = useState(false);
   const form = useRef<HTMLFormElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [email, setEmail] = useState("");
@@ -23,7 +24,10 @@ export function LoginView() {
   const [busy, setBusy] = useState(false);
   const [welcome, setWelcome] = useState<AuthUser | null>(null);
 
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => {
+    setFromCheckout(new URLSearchParams(window.location.search).get("next") === "/checkout");
+    return () => clearTimeout(timer.current);
+  }, []);
 
   const finish = (user: AuthUser) => {
     setSessionUser(user);
@@ -85,7 +89,7 @@ export function LoginView() {
       ) : (
         <>
           <h1 className={styles.title}>Welcome back</h1>
-          <p className={styles.lead}>Sign in to track your orders, save addresses and try sarees on with AI.</p>
+          <p className={styles.lead}>{fromCheckout ? "Please sign in to continue to checkout. Your bag is saved." : "Sign in to track your orders, save addresses and try sarees on with AI."}</p>
 
           <GoogleButton text="signin_with" clientId={googleClientId} disabled={busy} onCredential={onGoogle} onUnavailable={setNotice} />
           <div className={styles.divider}>or sign in with email</div>
@@ -123,7 +127,7 @@ export function LoginView() {
             </button>
           </form>
 
-          <p className={styles.switch}>New to Pratyangi Fashions? <Link href="/signup">Create an account</Link></p>
+          <p className={styles.switch}>New to Pratyangi Fashions? <Link href={fromCheckout ? "/signup?next=/checkout" : "/signup"}>Create an account</Link></p>
           {authMode === "demo" && <p className={styles.demoNote}>Demo mode: accounts are kept only in this browser until the store server is connected.</p>}
         </>
       )}

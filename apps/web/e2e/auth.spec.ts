@@ -137,3 +137,29 @@ test("signed out, the header icon leads to sign in and the account page offers i
   await page.goto("/account");
   await expect(page.getByRole("link", { name: "Sign in to your account" })).toBeVisible();
 });
+
+test.describe("checkout needs an account", () => {
+  test("signed out, Proceed to Checkout opens sign in, and signing in lands on checkout", async ({ page }) => {
+    await page.goto("/bag");
+    await page.getByRole("link", { name: /Proceed to Checkout/ }).click();
+    await expect(page).toHaveURL(/\/login\?next=\/checkout/);
+    await expect(page.getByText("Please sign in to continue to checkout")).toBeVisible();
+    await page.getByRole("link", { name: "Create an account" }).click();
+    await expect(page).toHaveURL(/\/signup\?next=\/checkout/);
+
+    await page.getByLabel("Full name").fill("Test Buyer");
+    await page.getByLabel("Email address").fill(unique());
+    await page.getByLabel("Mobile number").fill("9876543210");
+    await page.getByLabel("Password", { exact: true }).fill("Saree2026");
+    await page.getByLabel("Confirm password", { exact: true }).fill("Saree2026");
+    await page.getByText("I agree to the").click();
+    await page.getByRole("button", { name: "Create Account" }).click();
+    await expect(page).toHaveURL(/\/checkout$/, { timeout: 8000 });
+    await expect(page.getByRole("heading", { name: "Checkout", level: 1 })).toBeVisible();
+  });
+
+  test("opening /checkout directly while signed out also leads to sign in", async ({ page }) => {
+    await page.goto("/checkout");
+    await expect(page).toHaveURL(/\/login\?next=\/checkout/);
+  });
+});

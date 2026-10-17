@@ -30,7 +30,14 @@ test.describe("Shop menu", () => {
   });
 });
 
+// Checkout needs an account, so these tests start signed in (the demo session lives in localStorage).
+const signedIn = { id: "u1", name: "Test Buyer", email: "buyer@example.com", provider: "password" };
+
 test.describe("checkout", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript((user) => window.localStorage.setItem("pratyangi-demo-session", JSON.stringify(user)), signedIn);
+  });
+
   test("the bag leads to checkout", async ({ page }) => {
     await page.goto("/bag");
     await page.getByRole("link", { name: /Proceed to Checkout/ }).click();
