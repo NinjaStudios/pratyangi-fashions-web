@@ -1,14 +1,16 @@
-import { AuthError, type AuthClient, type AuthUser, type SignUpInput } from "./types";
+import { AuthError, type AuthClient, type AuthUser } from "./types";
 
 /**
  * DEMO sign-in used until the real API exists (set NEXT_PUBLIC_API_URL to switch to it, see ./index.ts).
- * Accounts live only in this browser's storage. Passwords are salted and hashed with SHA-256 so no plain password is
- * saved, but this is a stand-in for local review, not real security: a real server must hash with Argon2 or bcrypt.
+ * No SMS is sent: every number accepts the code below, and the pages say so. Accounts live only in this browser's storage.
+ * The real server generates a random code per request, sends it by SMS, limits attempts and expires it after a few minutes.
  */
+export const demoOtpCode = "123456";
+
 const usersKey = "pratyangi-demo-users";
 const sessionKey = "pratyangi-demo-session";
 
-type StoredUser = { id: string; name: string; email: string; phone: string; salt: string; hash: string };
+type StoredUser = { id: string; name: string; phone: string };
 
 const readUsers = (): StoredUser[] => {
   try {
@@ -18,16 +20,7 @@ const readUsers = (): StoredUser[] => {
     return [];
   }
 };
-const writeUsers = (users: StoredUser[]) => window.localStorage.setItem(usersKey, JSON.stringify(users));
 
-const toHex = (buffer: ArrayBuffer) => [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-const randomSalt = () => toHex(crypto.getRandomValues(new Uint8Array(16)).buffer);
-async function hash(password: string, salt: string) {
-  if (!window.crypto?.subtle) throw new AuthError("Sign-in needs a secure connection (https) in this browser.");
-  return toHex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${salt}:${password}`)));
-}
-
-const publicUser = (user: StoredUser): AuthUser => ({ id: user.id, name: user.name, email: user.email, provider: "password" });
 const startSession = (user: AuthUser) => {
   window.localStorage.setItem(sessionKey, JSON.stringify(user));
   return user;
@@ -45,25 +38,20 @@ function decodeGoogleCredential(credential: string): { name?: string; email?: st
 }
 
 export const demoAuth: AuthClient = {
-  async signIn(email, password) {
-    const user = readUsers().find((candidate) => candidate.email === email.trim().toLowerCase());
-    // the same message for "no such email" and "wrong password", so the form never reveals which emails exist
-    const wrong = new AuthError("The email or password is incorrect.");
-    if (!user) throw wrong;
-    if ((await hash(password, user.salt)) !== user.hash) throw wrong;
-    return startSession(publicUser(user));
+  async sendOtp(phone) {
+    return { isNew: !readUsers().some((user) => user.phone === phone) };
   },
 
-  async signUp(input: SignUpInput) {
-    const email = input.email.trim().toLowerCase();
+  async verifyOtp({ phone, code, name }) {
+    if (code !== demoOtpCode) throw new AuthError("That code is not correct. Please check it and try again.", "code");
     const users = readUsers();
-    if (users.some((candidate) => candidate.email === email)) {
-      throw new AuthError("An account with this email already exists. Try signing in.", "email");
+    let user = users.find((candidate) => candidate.phone === phone);
+    if (!user) {
+      if (!name?.trim()) throw new AuthError("Enter your full name to create your account", "name");
+      user = { id: `demo-${Date.now()}`, name: name.trim(), phone };
+      window.localStorage.setItem(usersKey, JSON.stringify([...users, user]));
     }
-    const salt = randomSalt();
-    const user: StoredUser = { id: `demo-${Date.now()}`, name: input.name.trim(), email, phone: input.phone, salt, hash: await hash(input.password, salt) };
-    writeUsers([...users, user]);
-    return startSession(publicUser(user));
+    return startSession({ id: user.id, name: user.name, phone: user.phone, provider: "phone" });
   },
 
   async signInWithGoogle(credential) {

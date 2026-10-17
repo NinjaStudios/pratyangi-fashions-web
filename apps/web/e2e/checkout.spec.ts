@@ -31,7 +31,7 @@ test.describe("Shop menu", () => {
 });
 
 // Checkout needs an account, so these tests start signed in (the demo session lives in localStorage).
-const signedIn = { id: "u1", name: "Test Buyer", email: "buyer@example.com", provider: "password" };
+const signedIn = { id: "u1", name: "Test Buyer", phone: "9876543210", provider: "phone" };
 
 test.describe("checkout", () => {
   test.beforeEach(async ({ page }) => {
@@ -177,6 +177,16 @@ test.describe("checkout", () => {
     await page.getByRole("button", { name: /Review Order/ }).click();
     await expect(page.getByRole("heading", { name: /Review & Place Order/ , level: 2 })).toBeVisible();
     await expect(page.getByText("Cash on delivery").first()).toBeVisible();
+
+    // the review step can go back, one step or all the way to delivery, and keeps the choices
+    await page.getByRole("button", { name: "← Back to payment" }).click();
+    await expect(page.getByRole("heading", { name: "Payment Method" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: /Cash on delivery/ })).toBeChecked();
+    await page.getByRole("button", { name: /Review Order/ }).click();
+    await page.getByRole("button", { name: "← Back to delivery" }).click();
+    await expect(page.getByRole("heading", { name: "Delivery Address" })).toBeVisible();
+    await page.getByRole("button", { name: /Proceed to Pay/ }).click();
+    await page.getByRole("button", { name: /Review Order/ }).click();
 
     await page.getByRole("button", { name: /Place Order/ }).click();
     await expect(page.getByRole("status").filter({ hasText: "not available in this local demo" })).toBeVisible();

@@ -88,16 +88,20 @@ the server (the website never stores a token).
 
 | Method and path | Body | Success | Failure (JSON `{ message, field? }`) |
 | --- | --- | --- | --- |
-| `POST /auth/signup` | `{ name, email, phone, password }` | `201 { user }` and session cookie | `409` email already used (`field: "email"`), `422` invalid input |
-| `POST /auth/login` | `{ email, password }` | `200 { user }` and session cookie | `401` with one neutral message ("The email or password is incorrect.") |
+| `POST /auth/otp/send` | `{ phone }` (10 digits) | `200 { isNew }`; an SMS with a 6-digit code goes to the number | `422` invalid number (`field: "phone"`), `429` too many requests |
+| `POST /auth/otp/verify` | `{ phone, code, name? }` | `200 { user }` and session cookie; the account is created when `isNew` | `401` wrong or expired code (`field: "code"`), `422` name missing for a new number (`field: "name"`), `429` too many attempts |
 | `POST /auth/google` | `{ credential }` (Google ID token) | `200 { user }` and session cookie | `401` token invalid |
 | `POST /auth/logout` | none | `204` and cookie cleared | none |
 | `GET /auth/me` | none | `200 { user }` | `401` when signed out |
 
-`user` is `{ id, name, email, provider: "password" | "google", picture? }`.
+`user` is `{ id, name, phone?, email?, provider: "phone" | "google", picture? }`.
 
-Server rules: validate every field again with Zod (the browser checks are only for convenience); hash passwords with Argon2 or
-bcrypt; rate-limit login, signup and Google routes; never say whether an email exists on login; CORS allows only the website's
+OTP rules: a random 6-digit code per request, stored hashed, valid for about 5 minutes, single use; allow 5 wrong attempts per
+code and a few sends per number per hour; a new code replaces the old one. The SMS goes through an Indian provider (MSG91,
+Twilio Verify or similar). India's TRAI rules require the sender ID and message template to be registered (DLT) before any OTP
+SMS is delivered, so the client should start that registration early. Keep the demo code (`123456`) out of the real server.
+
+Server rules: validate every field again with Zod (the browser checks are only for convenience); rate-limit the OTP and Google routes; CORS allows only the website's
 address; CSRF protection on every state-changing route. For Google: verify the ID token with Google's library
 (`google-auth-library`, `verifyIdToken` with your client ID as the audience), accept only `email_verified: true`, and link by email.
 

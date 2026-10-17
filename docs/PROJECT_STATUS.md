@@ -184,8 +184,9 @@ The six gold plinths are no longer part of `stage.webp`; each is its own image (
 
 ## Sign in and create account
 
-- New pages `/login` and `/signup` in the site's own look (brand panel with perks on desktop, one card on phones), with "Continue with Google", show/hide password, password strength meter and rules, field checks, neutral error for wrong password, success animation and `?next=` return (same-site only).
+- New pages `/login` and `/signup` in the site's own look (brand panel with perks on desktop, one card on phones), with "Continue with Google" or a mobile number plus a 6-digit OTP (no email, no password). Sign in and create account are one flow: a number with no account is asked for a name on the code step. Resend timer (30 s), change number, field checks, success animation and `?next=` return (same-site only). Checkout asks signed-out visitors to sign in first. Demo mode sends no SMS: every number accepts the code `123456`, and the page says so.
 - The header account icon goes to `/login` when signed out and `/account` when signed in; the account page greets the signed-in name and Logout works.
 - Behind it: `apps/web/src/lib/auth/` (`AuthClient` interface, demo implementation for now, API implementation ready; contract and the Google setup steps are in `docs/BACKEND_PLAN.md`). Settings go in `apps/web/.env.local` (see `.env.example`): `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
 - Not in the Figma file: these two screens follow the checkout/account look and should be shown to the designer.
-- Still to build: password reset, email/phone verification, and the real API.
+- Still to build: the real API, the SMS provider (needs DLT registration in India) and the Google client ID.
+- Checkout: the Review step has "Back to payment" and "Back to delivery".

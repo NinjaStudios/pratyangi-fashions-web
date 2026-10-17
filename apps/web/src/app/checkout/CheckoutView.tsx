@@ -286,6 +286,10 @@ export function CheckoutView() {
                     <button type="button" onClick={() => goTo(2)}>Change</button>
                   </div>
                 </dl>
+                <div className={styles.backLinks}>
+                  <button type="button" className={styles.backLink} onClick={() => goTo(2)}>← Back to payment</button>
+                  <button type="button" className={styles.backLink} onClick={() => goTo(1)}>← Back to delivery</button>
+                </div>
               </motion.section>
             )}
           </div>

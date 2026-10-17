@@ -1,4 +1,4 @@
-import { AuthError, type AuthClient, type AuthUser } from "./types";
+import { AuthError, type AuthClient, type AuthUser, type OtpSent } from "./types";
 
 /**
  * The real account system: talks to the store's API (apps/api, planned; contract in docs/BACKEND_PLAN.md).
@@ -24,8 +24,8 @@ export function createApiAuth(baseUrl: string): AuthClient {
   const user = (data: { user: AuthUser }) => data.user;
 
   return {
-    signIn: async (email, password) => user(await call("/auth/login", { method: "POST", body: { email, password } })),
-    signUp: async (input) => user(await call("/auth/signup", { method: "POST", body: input })),
+    sendOtp: async (phone) => call<OtpSent>("/auth/otp/send", { method: "POST", body: { phone } }),
+    verifyOtp: async (input) => user(await call("/auth/otp/verify", { method: "POST", body: input })),
     signInWithGoogle: async (credential) => user(await call("/auth/google", { method: "POST", body: { credential } })),
     signOut: async () => {
       await call("/auth/logout", { method: "POST" });

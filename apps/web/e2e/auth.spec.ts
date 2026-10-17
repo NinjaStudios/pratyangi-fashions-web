@@ -1,48 +1,41 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const unique = () => `buyer${Date.now()}${Math.floor(Math.random() * 1000)}@example.com`;
+// Demo mode sends no SMS: every number accepts this code (see lib/auth/demoAuth.ts).
+const demoCode = "123456";
+const unique = () => `9${Math.floor(100000000 + Math.random() * 899999999)}`;
 
-async function signUp(page: Page, email: string, password = "Saree2026", name = "Test Buyer") {
-  await page.goto("/signup");
+async function sendCode(page: Page, path: string, phone: string) {
+  await page.goto(path);
+  await page.getByLabel("Mobile number").fill(phone);
+  await page.getByRole("button", { name: "Send OTP" }).click();
+  await expect(page.getByRole("heading", { name: "Verify your number", level: 1 })).toBeVisible();
+}
+
+async function signUp(page: Page, phone: string, name = "Test Buyer", path = "/signup") {
+  await sendCode(page, path, phone);
   await page.getByLabel("Full name").fill(name);
-  await page.getByLabel("Email address").fill(email);
-  await page.getByLabel("Mobile number").fill("9876543210");
-  await page.getByLabel("Password", { exact: true }).fill(password);
-  await page.getByLabel("Confirm password", { exact: true }).fill(password);
-  await page.getByText("I agree to the").click();
-  await page.getByRole("button", { name: "Create Account" }).click();
+  await page.getByLabel("One-time code").fill(demoCode);
+  await page.getByRole("button", { name: "Verify & Create Account" }).click();
 }
 
 test.describe("sign in", () => {
-  test("shows the form with Google sign-in and a link to create an account", async ({ page }) => {
+  test("offers Google and a mobile number, with no email or password", async ({ page }) => {
     await page.goto("/login");
     await expect(page.getByRole("heading", { name: "Welcome back", level: 1 })).toBeVisible();
     await expect(page.getByRole("button", { name: "Sign in with Google" })).toBeVisible();
-    await expect(page.getByLabel("Email address")).toBeVisible();
-    await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Forgot password?" })).toBeVisible();
+    await expect(page.getByLabel("Mobile number")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Send OTP" })).toBeVisible();
+    await expect(page.getByLabel(/Email|Password/)).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Create an account" })).toHaveAttribute("href", "/signup");
   });
 
-  test("checks the fields before sending", async ({ page }) => {
+  test("checks the mobile number before sending a code", async ({ page }) => {
     await page.goto("/login");
-    await page.getByRole("button", { name: "Sign In", exact: true }).click();
-    await expect(page.locator("form").getByRole("alert")).toHaveCount(2);
-    await expect(page.getByText("Enter your email address")).toBeVisible();
-    await page.getByLabel("Email address").fill("not-an-email");
-    await page.getByLabel("Password", { exact: true }).fill("x");
-    await page.getByRole("button", { name: "Sign In", exact: true }).click();
-    await expect(page.getByText(/Enter a valid email address/)).toBeVisible();
-  });
-
-  test("the eye button shows and hides the password", async ({ page }) => {
-    await page.goto("/login");
-    const password = page.getByLabel("Password", { exact: true });
-    await expect(password).toHaveAttribute("type", "password");
-    await page.getByRole("button", { name: "Show password" }).click();
-    await expect(password).toHaveAttribute("type", "text");
-    await page.getByRole("button", { name: "Hide password" }).click();
-    await expect(password).toHaveAttribute("type", "password");
+    await page.getByRole("button", { name: "Send OTP" }).click();
+    await expect(page.getByText("Enter your mobile number")).toBeVisible();
+    await page.getByLabel("Mobile number").fill("12345");
+    await page.getByRole("button", { name: "Send OTP" }).click();
+    await expect(page.getByText("Enter a valid 10-digit mobile number")).toBeVisible();
   });
 
   test("Google button explains what is missing while no client ID is set", async ({ page }) => {
@@ -51,43 +44,32 @@ test.describe("sign in", () => {
     await expect(page.getByRole("status").filter({ hasText: "Google sign-in is not switched on yet" })).toBeVisible();
   });
 
-  test("an unknown email or wrong password gets one neutral message", async ({ page }) => {
-    await page.goto("/login");
-    await page.getByLabel("Email address").fill("nobody@example.com");
-    await page.getByLabel("Password", { exact: true }).fill("Whatever1");
-    await page.getByRole("button", { name: "Sign In", exact: true }).click();
-    await expect(page.getByRole("alert").filter({ hasText: "The email or password is incorrect." })).toBeVisible();
+  test("a wrong code is refused, and the number can be changed", async ({ page }) => {
+    await sendCode(page, "/login", unique());
+    await expect(page.getByRole("status").filter({ hasText: `Use the code ${demoCode}` })).toBeVisible();
+    await page.getByLabel("One-time code").fill("111111");
+    await page.getByLabel("Full name").fill("Test Buyer");
+    await page.getByRole("button", { name: "Verify & Create Account" }).click();
+    await expect(page.getByText("That code is not correct")).toBeVisible();
+    await page.getByRole("button", { name: "Change number" }).click();
+    await expect(page.getByLabel("Mobile number")).toBeVisible();
+  });
+
+  test("the code only takes digits, the resend button waits, and a short code is refused", async ({ page }) => {
+    await sendCode(page, "/login", unique());
+    const code = page.getByLabel("One-time code");
+    await code.fill("12ab34");
+    await expect(code).toHaveValue("1234");
+    await expect(page.getByRole("button", { name: /Resend OTP in \d+s/ })).toBeDisabled();
+    await page.getByLabel("Full name").fill("Test Buyer");
+    await page.getByRole("button", { name: "Verify & Create Account" }).click();
+    await expect(page.getByText("The code is 6 digits")).toBeVisible();
   });
 });
 
-test.describe("create account", () => {
-  test("checks every field and the terms", async ({ page }) => {
-    await page.goto("/signup");
-    await page.getByRole("button", { name: "Create Account" }).click();
-    await expect(page.locator("form").getByRole("alert")).toHaveCount(6);
-    await expect(page.getByText("Please accept the terms to continue")).toBeVisible();
-    await page.getByLabel("Password", { exact: true }).fill("Saree2026");
-    await page.getByLabel("Confirm password", { exact: true }).fill("Different1");
-    await page.getByRole("button", { name: "Create Account" }).click();
-    await expect(page.getByText("The two passwords do not match")).toBeVisible();
-  });
-
-  test("the strength meter and rules follow the password as it is typed", async ({ page }) => {
-    await page.goto("/signup");
-    const password = page.getByLabel("Password", { exact: true });
-    const meter = page.getByRole("status").filter({ hasText: /Password strength|Use at least 8/ });
-    await password.fill("abc");
-    await expect(meter).toHaveText("Password strength: Weak");
-    await password.fill("Saree2026");
-    await expect(meter).toHaveText(/Password strength: (Good|Strong)/);
-    await password.fill("Saree@2026-Silk");
-    await expect(meter).toHaveText("Password strength: Strong");
-    await expect(page.getByRole("list", { name: "Password rules" }).locator("li").first()).toContainText("✓");
-  });
-
-  test("signing up signs you in: the account shows your name, and logout signs you out", async ({ page }) => {
-    const email = unique();
-    await signUp(page, email, "Saree2026", "Meera Kumar");
+test.describe("create account and sign back in", () => {
+  test("a new number is asked for a name, gets an account, and logout signs out", async ({ page }) => {
+    await signUp(page, unique(), "Meera Kumar");
     await expect(page.getByRole("heading", { name: "Welcome, Meera!" })).toBeVisible();
     await expect(page).toHaveURL(/\/account$/, { timeout: 8000 });
     await expect(page.getByRole("heading", { name: "Hello, Meera" })).toBeVisible();
@@ -98,35 +80,28 @@ test.describe("create account", () => {
     await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
   });
 
-  test("the same email cannot be used twice, and a created account can sign in later", async ({ page }) => {
-    const email = unique();
-    await signUp(page, email);
+  test("the name is required for a new number", async ({ page }) => {
+    await sendCode(page, "/signup", unique());
+    await page.getByLabel("One-time code").fill(demoCode);
+    await page.getByRole("button", { name: "Verify & Create Account" }).click();
+    await expect(page.getByText("Enter your full name")).toBeVisible();
+  });
+
+  test("a returning number signs in with just the code", async ({ page }) => {
+    const phone = unique();
+    await signUp(page, phone);
     await expect(page).toHaveURL(/\/account$/, { timeout: 8000 });
     await page.getByRole("button", { name: "Logout" }).click();
 
-    await signUp(page, email);
-    await expect(page.getByText("An account with this email already exists")).toBeVisible();
-
-    await page.goto("/login");
-    await page.getByLabel("Email address").fill(email);
-    await page.getByLabel("Password", { exact: true }).fill("Wrong1234");
-    await page.getByRole("button", { name: "Sign In", exact: true }).click();
-    await expect(page.getByText("The email or password is incorrect.")).toBeVisible();
-    await page.getByLabel("Password", { exact: true }).fill("Saree2026");
-    await page.getByRole("button", { name: "Sign In", exact: true }).click();
+    await sendCode(page, "/login", phone);
+    await expect(page.getByLabel("Full name")).toHaveCount(0);
+    await page.getByLabel("One-time code").fill(demoCode);
+    await page.getByRole("button", { name: "Verify & Sign In" }).click();
     await expect(page.getByRole("heading", { name: /Welcome back, Test!/ })).toBeVisible();
   });
 
   test("?next= sends you back to where you were, but only inside the site", async ({ page }) => {
-    const email = unique();
-    await page.goto("/signup?next=/bag");
-    await page.getByLabel("Full name").fill("Test Buyer");
-    await page.getByLabel("Email address").fill(email);
-    await page.getByLabel("Mobile number").fill("9876543210");
-    await page.getByLabel("Password", { exact: true }).fill("Saree2026");
-    await page.getByLabel("Confirm password", { exact: true }).fill("Saree2026");
-    await page.getByText("I agree to the").click();
-    await page.getByRole("button", { name: "Create Account" }).click();
+    await signUp(page, unique(), "Test Buyer", "/signup?next=/bag");
     await expect(page).toHaveURL(/\/bag$/, { timeout: 8000 });
   });
 });
@@ -147,13 +122,11 @@ test.describe("checkout needs an account", () => {
     await page.getByRole("link", { name: "Create an account" }).click();
     await expect(page).toHaveURL(/\/signup\?next=\/checkout/);
 
+    await page.getByLabel("Mobile number").fill(unique());
+    await page.getByRole("button", { name: "Send OTP" }).click();
     await page.getByLabel("Full name").fill("Test Buyer");
-    await page.getByLabel("Email address").fill(unique());
-    await page.getByLabel("Mobile number").fill("9876543210");
-    await page.getByLabel("Password", { exact: true }).fill("Saree2026");
-    await page.getByLabel("Confirm password", { exact: true }).fill("Saree2026");
-    await page.getByText("I agree to the").click();
-    await page.getByRole("button", { name: "Create Account" }).click();
+    await page.getByLabel("One-time code").fill(demoCode);
+    await page.getByRole("button", { name: "Verify & Create Account" }).click();
     await expect(page).toHaveURL(/\/checkout$/, { timeout: 8000 });
     await expect(page.getByRole("heading", { name: "Checkout", level: 1 })).toBeVisible();
   });

@@ -1,12 +1,5 @@
 /** Input rules shared by the login and signup forms. The server must repeat these checks: the browser is never trusted. */
 
-export const validateEmail = (value: string) => {
-  const email = value.trim();
-  if (!email) return "Enter your email address";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return "Enter a valid email address, like name@example.com";
-  return "";
-};
-
 export const validateName = (value: string) => {
   const name = value.trim();
   if (name.length < 2) return "Enter your full name";
@@ -23,30 +16,15 @@ export const validatePhone = (value: string) => {
   return "";
 };
 
-export const passwordRules = [
-  { id: "length", label: "At least 8 characters", test: (value: string) => value.length >= 8 },
-  { id: "letter", label: "A letter", test: (value: string) => /[A-Za-z]/.test(value) },
-  { id: "number", label: "A number", test: (value: string) => /\d/.test(value) },
-] as const;
-
-export const validatePassword = (value: string) => {
-  if (!value) return "Create a password";
-  const missing = passwordRules.find((rule) => !rule.test(value));
-  return missing ? `Password needs: ${missing.label.toLowerCase()}` : "";
+export const otpLength = 6;
+export const validateOtp = (value: string) => {
+  if (!value) return "Enter the 6-digit code";
+  if (value.length !== otpLength || !/^\d+$/.test(value)) return "The code is 6 digits";
+  return "";
 };
 
-/** 0 (empty) to 4 (strong). A hint for the meter only; the rules above decide what is accepted. */
-export const passwordStrength = (value: string) => {
-  if (!value) return 0;
-  let score = 0;
-  if (value.length >= 8) score++;
-  if (/[a-z]/.test(value) && /[A-Z]/.test(value)) score++;
-  if (/\d/.test(value)) score++;
-  if (/[^A-Za-z0-9]/.test(value) || value.length >= 14) score++;
-  return Math.max(1, score);
-};
-
-export const strengthLabels = ["", "Weak", "Fair", "Good", "Strong"] as const;
+/** "98765 43210" for display. */
+export const formatPhone = (digits: string) => `${digits.slice(0, 5)} ${digits.slice(5)}`.trim();
 
 /** Only follow `?next=` to a page on this site. */
 export const safeNext = (value: string | null | undefined) => (value && value.startsWith("/") && !value.startsWith("//") ? value : "/account");
