@@ -12,6 +12,7 @@ next-env.d.ts
 # environment files (keep an .env.example if one is added)
 .env*
 !.env.example
+!.env.test.example
 
 # logs and coverage
 *.log

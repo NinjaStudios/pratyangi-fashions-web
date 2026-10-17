@@ -3,15 +3,35 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { createApiAuth } from "./apiAuth";
 import { demoAuth } from "./demoAuth";
-import type { AuthClient, AuthUser } from "./types";
+import { AuthError, type AuthClient, type AuthUser } from "./types";
 
 export * from "./types";
 export * from "./validation";
 
-/** Real API when NEXT_PUBLIC_API_URL is set (see .env.example), otherwise the in-browser demo. */
-const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
-export const authClient: AuthClient = apiUrl ? createApiAuth(apiUrl) : demoAuth;
-export const authMode: "api" | "demo" = apiUrl ? "api" : "demo";
+/**
+ * Which account system the site talks to:
+ *  - "api":  the store API at NEXT_PUBLIC_API_URL (the real thing)
+ *  - "demo": the in-browser stand-in, ONLY when NEXT_PUBLIC_AUTH_DEMO=true (local review, tests). Not real authentication.
+ *  - "off":  neither is set. Nothing pretends to work: the forms explain that accounts are not connected yet.
+ */
+export const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "";
+export const authMode: "api" | "demo" | "off" = apiBaseUrl ? "api" : process.env.NEXT_PUBLIC_AUTH_DEMO === "true" ? "demo" : "off";
+
+export const notConnectedMessage = "Accounts are not connected yet: the store server has not been set up, so signing in is not available right now.";
+const notConnected = (): never => {
+  throw new AuthError(notConnectedMessage);
+};
+const offAuth: AuthClient = {
+  signIn: async () => notConnected(),
+  signUp: async () => notConnected(),
+  signInWithGoogle: async () => notConnected(),
+  startPasswordReset: async () => notConnected(),
+  finishPasswordReset: async () => notConnected(),
+  signOut: async () => undefined,
+  current: async () => null,
+};
+
+export const authClient: AuthClient = authMode === "api" ? createApiAuth(apiBaseUrl) : authMode === "demo" ? demoAuth : offAuth;
 export const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
 // ---- the signed-in user, shared by the header, the account pages and the forms -----------------------------------------

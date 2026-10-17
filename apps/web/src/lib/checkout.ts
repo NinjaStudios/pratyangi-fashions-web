@@ -43,6 +43,15 @@ export const demoAddresses: SavedAddress[] = [
   { id: "pg", type: "Other", label: "PG", name: "Gaurav Kumar", phone: "+91 9876543210", house: "Room 12, Sunrise PG", street: "HITC City", city: "Hyderabad", state: "Telangana", pincode: "500081" },
 ];
 
+/** Indian mobile numbers: ten digits starting 6-9. A leading +91, 91 or 0 and any spaces or dashes are ignored. */
+export const normalisePhone = (value: string) => value.replace(/\D/g, "").replace(/^(91|0)(?=\d{10}$)/, "");
+export const validatePhone = (value: string) => {
+  const digits = normalisePhone(value);
+  if (!digits) return "Enter the delivery mobile number.";
+  if (!/^[6-9]\d{9}$/.test(digits)) return "Enter a valid 10-digit mobile number that starts with 6, 7, 8 or 9.";
+  return "";
+};
+
 export const indianStates = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
   "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan",

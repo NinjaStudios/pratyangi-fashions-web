@@ -39,9 +39,11 @@ export function Welcome({ user, created }: { user: AuthUser; created: boolean })
   );
 }
 
-/** Splits a failure into the message for one input (when the server named one) or for the whole form. */
-export function describeError(error: unknown): { field?: NonNullable<AuthError["field"]>; message: string } {
-  return error instanceof AuthError ? { field: error.field, message: error.message } : { message: "Something went wrong. Please try again." };
+/** What a failed call tells the form: a message for the whole form, and the messages for single inputs when the server named them. */
+export function describeError(error: unknown): { message: string; field?: NonNullable<AuthError["field"]>; errors: NonNullable<AuthError["errors"]> } {
+  if (!(error instanceof AuthError)) return { message: "Something went wrong. Please try again.", errors: {} };
+  const errors = { ...(error.errors ?? {}), ...(error.field ? { [error.field]: error.errors?.[error.field] ?? error.message } : {}) };
+  return { message: error.message, field: error.field, errors };
 }
 
 /** Counts down from `from` once a second; `start()` restarts it. Used for "Resend OTP in 29s". */

@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Building2, ChevronDown, House, MapPin, Pencil, X } from "lucide-react";
-import { addressLines, demoPincodes, indianStates, type AddressType, type SavedAddress } from "@/lib/checkout";
+import { AddressError, type AddressDraft } from "@/lib/addressBook";
+import { addressLines, demoPincodes, indianStates, normalisePhone, validatePhone, type AddressType, type SavedAddress } from "@/lib/checkout";
 import { easeOutExpo } from "@/lib/motion/presets";
 import styles from "./AddressDialog.module.css";
 
@@ -15,12 +16,13 @@ type AddressDialogProps = {
   /** The address to edit when the dialog opens, or null to start a new one. */
   editing: SavedAddress | null;
   onSelect: (id: string) => void;
-  onSave: (address: Omit<SavedAddress, "id"> & { id?: string }) => void;
-  onDelete: (id: string) => void;
-  onSetDefault: (id: string) => void;
+  /** These may fail (the server refuses, or cannot be reached): throw an AddressError and the dialog shows it, at the right input when it names one. */
+  onSave: (address: AddressDraft) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+  onSetDefault: (id: string) => Promise<void>;
   onClose: () => void;
-  /** Name and mobile of the signed-in customer: a new address starts with them filled in (they can change both). */
-  prefill?: { name?: string; phone?: string };
+  /** The signed-in customer's name: a new address starts with it filled in. The mobile is NOT prefilled: it is the delivery contact, not the login. */
+  prefill?: { name?: string };
 };
 
 type Fields = { name: string; phone: string; pincode: string; house: string; street: string; city: string; state: string; label: string };
@@ -33,20 +35,25 @@ const typeOptions: { type: AddressType; note: string; Icon: typeof House }[] = [
 ];
 
 const blank: Fields = { name: "", phone: "", pincode: "", house: "", street: "", city: "", state: "", label: "" };
-const toFields = (address: SavedAddress | null, prefill?: { name?: string; phone?: string }): Fields =>
+const toFields = (address: SavedAddress | null, prefill?: { name?: string }): Fields =>
   address
     ? { name: address.name, phone: address.phone.replace(/^\+91\s*/, ""), pincode: address.pincode, house: address.house, street: address.street, city: address.city, state: address.state, label: address.label === address.type ? "" : address.label }
-    : { ...blank, name: prefill?.name ?? "", phone: prefill?.phone ?? "" };
+    : { ...blank, name: prefill?.name ?? "" };
 
 const validate = (values: Fields): Errors => {
   const errors: Errors = {};
-  if (!values.name.trim()) errors.name = "Enter the full name";
-  if (values.phone.replace(/\D/g, "").length < 10) errors.phone = "Enter a 10-digit mobile number";
-  if (!/^\d{6}$/.test(values.pincode.trim())) errors.pincode = "Enter a 6-digit pincode";
-  if (!values.house.trim()) errors.house = "Enter the house, flat or building number";
-  if (!values.street.trim()) errors.street = "Enter the street, area or landmark";
-  if (!values.city.trim()) errors.city = "Enter the city";
-  if (!values.state) errors.state = "Choose the state";
+  const name = values.name.trim();
+  if (!name) errors.name = "Enter the recipient's full name.";
+  else if (name.length < 2) errors.name = "Enter the recipient's full name (at least 2 characters).";
+  const phone = validatePhone(values.phone);
+  if (phone) errors.phone = phone;
+  const pincode = values.pincode.trim();
+  if (!pincode) errors.pincode = "Enter the 6-digit PIN code.";
+  else if (!/^[1-9]\d{5}$/.test(pincode)) errors.pincode = "Enter a valid 6-digit PIN code (it cannot start with 0).";
+  if (!values.house.trim()) errors.house = "Enter the house, flat or building number.";
+  if (!values.street.trim()) errors.street = "Enter the street, area or landmark.";
+  if (values.city.trim().length < 2) errors.city = "Enter the city.";
+  if (!values.state) errors.state = "Choose the state.";
   return errors;
 };
 
@@ -76,6 +83,8 @@ export function AddressDialog({ addresses, selectedId, editing, onSelect, onSave
   const [pincodeNote, setPincodeNote] = useState("");
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [shake, setShake] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   const loadAddress = (address: SavedAddress | null) => {
     setEditId(address?.id ?? null);
@@ -83,7 +92,30 @@ export function AddressDialog({ addresses, selectedId, editing, onSelect, onSave
     setMakeDefault(address?.isDefault ?? false);
     setValues(toFields(address, prefill));
     setErrors({});
+    setActionError("");
     setPincodeNote("");
+  };
+
+  /** Runs a save, delete or default change; a refusal is shown in the dialog instead of being lost. Returns whether it worked. */
+  const attempt = async (task: () => Promise<void>) => {
+    setActionError("");
+    setBusy(true);
+    try {
+      await task();
+      return true;
+    } catch (error) {
+      const failure = error instanceof AddressError ? error : new AddressError("Something went wrong. Please try again.");
+      const named = Object.entries(failure.errors ?? {}).filter(([key]) => key in blank);
+      if (named.length) {
+        setErrors(Object.fromEntries(named) as Errors);
+        setShake((count) => count + 1);
+        requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLElement>("[aria-invalid=true]")?.focus());
+      }
+      setActionError(failure.message);
+      return false;
+    } finally {
+      setBusy(false);
+    }
   };
 
   // Keyboard: Esc closes the open menu first, then the dialog; Tab stays inside; focus returns to the opener on close.
@@ -125,7 +157,7 @@ export function AddressDialog({ addresses, selectedId, editing, onSelect, onSave
   const checkPincode = () => {
     const pin = values.pincode.trim();
     if (!/^\d{6}$/.test(pin)) {
-      setErrors((current) => ({ ...current, pincode: "Enter a 6-digit pincode" }));
+      setErrors((current) => ({ ...current, pincode: pin ? "Enter a valid 6-digit PIN code (it cannot start with 0)." : "Enter the 6-digit PIN code." }));
       setPincodeNote("");
       return;
     }
@@ -144,19 +176,19 @@ export function AddressDialog({ addresses, selectedId, editing, onSelect, onSave
       requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLElement>("[aria-invalid=true]")?.focus());
       return;
     }
-    onSave({
+    void attempt(() => onSave({
       id: editId ?? undefined,
       type,
       label: values.label.trim() || type,
       isDefault: makeDefault,
       name: values.name.trim(),
-      phone: "+91 " + values.phone.replace(/\D/g, "").slice(-10),
+      phone: "+91 " + normalisePhone(values.phone),
       house: values.house.trim(),
       street: values.street.trim(),
       city: values.city.trim(),
       state: values.state,
       pincode: values.pincode.trim(),
-    });
+    }));
   };
 
   const stagger = (index: number) => ({
@@ -242,8 +274,8 @@ export function AddressDialog({ addresses, selectedId, editing, onSelect, onSave
                             exit={{ opacity: 0, scale: 0.92 }}
                             transition={{ duration: reduceMotion ? 0 : 0.16 }}
                           >
-                            <button type="button" role="menuitem" disabled={address.isDefault} onClick={() => { onSetDefault(address.id); setMenuFor(null); }}>Set as default</button>
-                            <button type="button" role="menuitem" className={styles.danger} onClick={() => { onDelete(address.id); setMenuFor(null); if (editId === address.id) loadAddress(null); }}>Delete</button>
+                            <button type="button" role="menuitem" disabled={address.isDefault} onClick={() => { setMenuFor(null); void attempt(() => onSetDefault(address.id)); }}>Set as default</button>
+                            <button type="button" role="menuitem" className={styles.danger} onClick={() => { setMenuFor(null); void attempt(() => onDelete(address.id)).then((done) => { if (done && editId === address.id) loadAddress(null); }); }}>Delete</button>
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -346,6 +378,8 @@ export function AddressDialog({ addresses, selectedId, editing, onSelect, onSave
               <motion.div className={styles.field} {...stagger(8)}>{input("label", "Address Type Label (Optional)", { required: false, placeholder: "e.g. Home, Office,", autoComplete: "off" })}</motion.div>
             </div>
 
+            {actionError && <p className={styles.error} role="alert">{actionError}</p>}
+
             <motion.div className={styles.footer} {...stagger(9)}>
               <label className={styles.defaultToggle}>
                 <input type="checkbox" checked={makeDefault} onChange={(event) => setMakeDefault(event.target.checked)} />
@@ -357,7 +391,7 @@ export function AddressDialog({ addresses, selectedId, editing, onSelect, onSave
               </label>
               <div className={styles.buttons}>
                 <button type="button" className={styles.cancel} onClick={onClose}>Cancel</button>
-                <button type="submit" className={styles.save}>Save Address</button>
+                <button type="submit" className={styles.save} disabled={busy}>{busy ? "Saving…" : "Save Address"}</button>
               </div>
             </motion.div>
           </motion.form>

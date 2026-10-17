@@ -1,8 +1,8 @@
-import { AuthError, type AuthClient, type AuthUser, type ResetStarted, type SignupStarted } from "./types";
+import { AuthError, type AuthClient, type AuthUser } from "./types";
 
 /**
- * The real account system: talks to the store's API (apps/api, planned; contract in docs/BACKEND_PLAN.md).
- * The server keeps the session in an httpOnly cookie, so no token is ever stored by this code.
+ * The real account system: talks to the store API (apps/api; contract in docs/BACKEND_PLAN.md).
+ * The server keeps the session in an httpOnly cookie, so no token is ever stored by this code, and no secret lives in the website.
  */
 export function createApiAuth(baseUrl: string): AuthClient {
   async function call<T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> {
@@ -17,28 +17,23 @@ export function createApiAuth(baseUrl: string): AuthClient {
     } catch {
       throw new AuthError("We could not reach the server. Check your connection and try again.");
     }
-    const data = (await response.json().catch(() => ({}))) as { message?: string; field?: AuthError["field"] } & T;
-    if (!response.ok) throw new AuthError(data.message ?? "Something went wrong. Please try again.", data.field);
+    if (response.status === 204) return undefined as T;
+    const data = (await response.json().catch(() => ({}))) as { message?: string; field?: AuthError["field"]; errors?: AuthError["errors"] } & T;
+    if (!response.ok) throw new AuthError(data.message ?? "Something went wrong. Please try again.", data.field, data.errors);
     return data;
   }
   const user = (data: { user: AuthUser }) => data.user;
 
   return {
-    signIn: async (identifier, password) => user(await call("/auth/login", { method: "POST", body: { identifier, password } })),
-    startSignup: (input) => call<SignupStarted>("/auth/signup/start", { method: "POST", body: input }),
-    resendSignupCode: async (signupId, channel) => {
-      await call("/auth/signup/resend", { method: "POST", body: { signupId, channel } });
+    signIn: async (email, password) => user(await call("/auth/login", { method: "POST", body: { email, password } })),
+    signUp: async (input) => user(await call("/auth/signup", { method: "POST", body: input })),
+    signInWithGoogle: async (credential) => user(await call("/auth/google", { method: "POST", body: { credential } })),
+    startPasswordReset: async (email) => {
+      await call("/auth/password/forgot", { method: "POST", body: { email } });
     },
-    verifySignup: async (input) => user(await call("/auth/signup/verify", { method: "POST", body: input })),
-    sendLoginCode: async (phone) => {
-      await call("/auth/otp/send", { method: "POST", body: { phone } });
-    },
-    verifyLoginCode: async (phone, code) => user(await call("/auth/otp/verify", { method: "POST", body: { phone, code } })),
-    startPasswordReset: (identifier) => call<ResetStarted>("/auth/password/forgot", { method: "POST", body: { identifier } }),
     finishPasswordReset: async (input) => {
       await call("/auth/password/reset", { method: "POST", body: input });
     },
-    signInWithGoogle: async (credential) => user(await call("/auth/google", { method: "POST", body: { credential } })),
     signOut: async () => {
       await call("/auth/logout", { method: "POST" });
     },

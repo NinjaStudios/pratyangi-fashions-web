@@ -22,6 +22,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
+      - run: pnpm api:typecheck
       - run: pnpm --filter pratyangi-web exec playwright install --with-deps chromium
       # builds the site, then runs every browser test against the build
       - run: pnpm test
@@ -33,3 +34,39 @@ jobs:
           name: playwright-report
           path: apps/web/playwright-report
           retention-days: 7
+
+  api:
+    # the store API (apps/api) against a real MySQL, started fresh for the run
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root
+          MYSQL_DATABASE: pratyangi_shop_test
+          MYSQL_USER: pratyangi
+          MYSQL_PASSWORD: ci-password
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci-root"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm api:test
+        env:
+          NODE_ENV: test
+          DB_HOST: 127.0.0.1
+          DB_PORT: "3306"
+          DB_USER: pratyangi
+          DB_PASSWORD: ci-password
+          DB_NAME: pratyangi_shop_test
+          WEB_ORIGIN: http://localhost:3000

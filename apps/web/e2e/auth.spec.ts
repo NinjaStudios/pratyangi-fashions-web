@@ -1,63 +1,52 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Demo mode sends no SMS or email: every code is this one (see lib/auth/demoAuth.ts).
+// These tests run against a build with NEXT_PUBLIC_AUTH_DEMO=true (browser-only stand-in, see lib/auth/demoAuth.ts).
+// The real server is covered by apps/api/test and by e2e-api.
 const demoCode = "123456";
 const rand = () => Math.floor(100000000 + Math.random() * 899999999);
-const unique = () => ({ phone: `9${rand()}`, email: `buyer${Date.now()}${rand()}@example.com` });
+const unique = () => ({ name: "Test Buyer", email: `buyer${Date.now()}${rand()}@example.com`, password: "Saree2026" });
 
-type Person = { name?: string; phone: string; email: string; password?: string };
+type Person = { name?: string; email: string; password?: string };
 
-/** Fills the signup details and sends the codes: ends on the "Verify your details" step. */
-async function startSignup(page: Page, person: Person, path = "/signup") {
+async function signUp(page: Page, person: Person, path = "/signup") {
   await page.goto(path);
   await page.getByLabel("Full name").fill(person.name ?? "Test Buyer");
   await page.getByLabel("Email address").fill(person.email);
-  await page.getByLabel("Mobile number").fill(person.phone);
   await page.getByLabel("Password", { exact: true }).fill(person.password ?? "Saree2026");
   await page.getByLabel("Confirm password", { exact: true }).fill(person.password ?? "Saree2026");
   await page.getByText("I agree to the").click();
-  await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page.getByRole("heading", { name: "Verify your details", level: 1 })).toBeVisible();
+  await page.getByRole("button", { name: "Create Account" }).click();
 }
 
-async function signUp(page: Page, person: Person, path = "/signup") {
-  await startSignup(page, person, path);
-  await page.getByLabel("Mobile code").fill(demoCode);
-  await page.getByLabel("Email code").fill(demoCode);
-  await page.getByRole("button", { name: "Verify & Create Account" }).click();
-}
-
-async function signInWithPassword(page: Page, identifier: string, password: string) {
+async function signIn(page: Page, email: string, password: string) {
   await page.goto("/login");
-  await page.getByLabel("Email or mobile number").fill(identifier);
+  await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
 }
 
 test.describe("sign in", () => {
-  test("offers Google, email or mobile with a password, a mobile-code option and a reset link", async ({ page }) => {
+  test("offers Google, email and password, and a reset link, with no mobile number", async ({ page }) => {
     await page.goto("/login");
     await expect(page.getByRole("heading", { name: "Welcome back", level: 1 })).toBeVisible();
     await expect(page.getByRole("button", { name: "Sign in with Google" })).toBeVisible();
-    await expect(page.getByLabel("Email or mobile number")).toBeVisible();
+    await expect(page.getByLabel("Email address")).toBeVisible();
     await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
+    await expect(page.getByLabel(/mobile/i)).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Forgot password?" })).toHaveAttribute("href", "/forgot-password");
-    await expect(page.getByRole("button", { name: "Sign in with a mobile code instead" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Create an account" })).toHaveAttribute("href", "/signup");
   });
 
-  test("checks the fields before sending", async ({ page }) => {
+  test("says what is wrong with each field before sending", async ({ page }) => {
     await page.goto("/login");
     await page.getByRole("button", { name: "Sign In", exact: true }).click();
     await expect(page.locator("form").getByRole("alert")).toHaveCount(2);
-    await expect(page.getByText("Enter your email or mobile number")).toBeVisible();
-    await page.getByLabel("Email or mobile number").fill("not-an-email@");
+    await expect(page.getByText("Enter your email address.")).toBeVisible();
+    await expect(page.getByText("Enter your password.")).toBeVisible();
+    await page.getByLabel("Email address").fill("not-an-email@");
     await page.getByLabel("Password", { exact: true }).fill("x");
     await page.getByRole("button", { name: "Sign In", exact: true }).click();
-    await expect(page.getByText(/Enter a valid email address/)).toBeVisible();
-    await page.getByLabel("Email or mobile number").fill("12345");
-    await page.getByRole("button", { name: "Sign In", exact: true }).click();
-    await expect(page.getByText("Enter a valid 10-digit mobile number")).toBeVisible();
+    await expect(page.getByText("Enter a valid email address, like name@example.com.")).toBeVisible();
   });
 
   test("the eye button shows and hides the password", async ({ page }) => {
@@ -77,46 +66,44 @@ test.describe("sign in", () => {
   });
 
   test("an unknown account or a wrong password gets one neutral message", async ({ page }) => {
-    await signInWithPassword(page, "nobody@example.com", "Whatever1");
-    await expect(page.getByRole("alert").filter({ hasText: "The email or mobile number, or the password, is incorrect." })).toBeVisible();
-  });
-
-  test("the mobile-code option needs an existing account, then signs in with the code", async ({ page }) => {
-    const person = unique();
-    await page.goto("/login");
-    await page.getByRole("button", { name: "Sign in with a mobile code instead" }).click();
-    await page.getByLabel("Mobile number").fill(person.phone);
-    await page.getByRole("button", { name: "Send OTP" }).click();
-    await expect(page.getByText("We could not find an account with this mobile number")).toBeVisible();
-
-    await signUp(page, person);
-    await expect(page).toHaveURL(/\/account$/, { timeout: 8000 });
-    await page.getByRole("button", { name: "Logout" }).click();
-
-    await page.goto("/login");
-    await page.getByRole("button", { name: "Sign in with a mobile code instead" }).click();
-    await page.getByLabel("Mobile number").fill(person.phone);
-    await page.getByRole("button", { name: "Send OTP" }).click();
-    await expect(page.getByRole("status").filter({ hasText: `Use the code ${demoCode}` })).toBeVisible();
-    await page.getByLabel("One-time code").fill("111111");
-    await page.getByRole("button", { name: "Verify & Sign In" }).click();
-    await expect(page.getByText("That code is not correct")).toBeVisible();
-    await page.getByLabel("One-time code").fill(demoCode);
-    await page.getByRole("button", { name: "Verify & Sign In" }).click();
-    await expect(page.getByRole("heading", { name: /Welcome back, Test!/ })).toBeVisible();
+    await signIn(page, "nobody@example.com", "Whatever1");
+    await expect(page.getByRole("alert").filter({ hasText: "The email or password is incorrect." })).toBeVisible();
   });
 });
 
 test.describe("create account", () => {
-  test("checks every field and the terms", async ({ page }) => {
+  test("says what is wrong with each field and with the terms", async ({ page }) => {
     await page.goto("/signup");
-    await page.getByRole("button", { name: "Continue" }).click();
-    await expect(page.locator("form").getByRole("alert")).toHaveCount(6);
-    await expect(page.getByText("Please accept the terms to continue")).toBeVisible();
-    await page.getByLabel("Password", { exact: true }).fill("Saree2026");
+    await page.getByRole("button", { name: "Create Account" }).click();
+    await expect(page.locator("form").getByRole("alert")).toHaveCount(5);
+    await expect(page.getByText("Enter your full name.")).toBeVisible();
+    await expect(page.getByText("Enter your email address.")).toBeVisible();
+    await expect(page.getByText("Create a password.")).toBeVisible();
+    await expect(page.getByText("Re-enter your password.")).toBeVisible();
+    await expect(page.getByText("Please accept the terms to continue.")).toBeVisible();
+
+    await page.getByLabel("Full name").fill("A");
+    await page.getByLabel("Password", { exact: true }).fill("short");
     await page.getByLabel("Confirm password", { exact: true }).fill("Different1");
-    await page.getByRole("button", { name: "Continue" }).click();
-    await expect(page.getByText("The two passwords do not match")).toBeVisible();
+    await page.getByRole("button", { name: "Create Account" }).click();
+    await expect(page.getByText("Enter your full name (at least 2 characters).")).toBeVisible();
+    await expect(page.getByText("Password must be at least 8 characters.")).toBeVisible();
+    await expect(page.getByText("The two passwords do not match.")).toBeVisible();
+
+    await page.getByLabel("Password", { exact: true }).fill("abcdefgh");
+    await page.getByRole("button", { name: "Create Account" }).click();
+    await expect(page.getByText("Password needs at least one number.")).toBeVisible();
+    await page.getByLabel("Password", { exact: true }).fill("12345678");
+    await page.getByRole("button", { name: "Create Account" }).click();
+    await expect(page.getByText("Password needs at least one letter.")).toBeVisible();
+  });
+
+  test("asks for name, email and password only, no mobile number", async ({ page }) => {
+    await page.goto("/signup");
+    await expect(page.getByLabel("Full name")).toBeVisible();
+    await expect(page.getByLabel("Email address")).toBeVisible();
+    await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
+    await expect(page.getByLabel(/mobile|phone/i)).toHaveCount(0);
   });
 
   test("the strength meter and rules follow the password as it is typed", async ({ page }) => {
@@ -130,20 +117,8 @@ test.describe("create account", () => {
     await expect(page.getByRole("list", { name: "Password rules" }).locator("li").first()).toContainText("✓");
   });
 
-  test("codes go to the mobile and the email, both are needed, and then the account is created", async ({ page }) => {
-    const person = { ...unique(), name: "Meera Kumar" };
-    await startSignup(page, person);
-    await expect(page.getByText(`+91 ${person.phone.slice(0, 5)} ${person.phone.slice(5)}`)).toBeVisible();
-    await expect(page.getByText(person.email, { exact: false }).first()).toBeVisible();
-
-    // one wrong code is refused and says which one
-    await page.getByLabel("Mobile code").fill(demoCode);
-    await page.getByLabel("Email code").fill("111111");
-    await page.getByRole("button", { name: "Verify & Create Account" }).click();
-    await expect(page.getByText("That email code is not correct")).toBeVisible();
-
-    await page.getByLabel("Email code").fill(demoCode);
-    await page.getByRole("button", { name: "Verify & Create Account" }).click();
+  test("signing up signs you in: the account shows your name, and logout signs you out", async ({ page }) => {
+    await signUp(page, { ...unique(), name: "Meera Kumar" });
     await expect(page.getByRole("heading", { name: "Welcome, Meera!" })).toBeVisible();
     await expect(page).toHaveURL(/\/account$/, { timeout: 8000 });
     await expect(page.getByRole("heading", { name: "Hello, Meera" })).toBeVisible();
@@ -154,47 +129,19 @@ test.describe("create account", () => {
     await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
   });
 
-  test("resend waits, Edit details goes back, and the same email or mobile cannot register twice", async ({ page }) => {
-    const person = unique();
-    await startSignup(page, person);
-    await expect(page.getByRole("button", { name: /Resend mobile code in \d+s/ })).toBeDisabled();
-    await expect(page.getByRole("button", { name: /Resend email code in \d+s/ })).toBeDisabled();
-    await page.getByRole("button", { name: "Edit details" }).click();
-    await expect(page.getByLabel("Full name")).toHaveValue("Test Buyer");
-
-    await page.getByRole("button", { name: "Continue" }).click();
-    await page.getByLabel("Mobile code").fill(demoCode);
-    await page.getByLabel("Email code").fill(demoCode);
-    await page.getByRole("button", { name: "Verify & Create Account" }).click();
-    await expect(page).toHaveURL(/\/account$/, { timeout: 8000 });
-    await page.getByRole("button", { name: "Logout" }).click();
-
-    await page.goto("/signup");
-    await page.getByLabel("Full name").fill("Someone Else");
-    await page.getByLabel("Email address").fill(person.email);
-    await page.getByLabel("Mobile number").fill(`9${rand()}`);
-    await page.getByLabel("Password", { exact: true }).fill("Saree2026");
-    await page.getByLabel("Confirm password", { exact: true }).fill("Saree2026");
-    await page.getByText("I agree to the").click();
-    await page.getByRole("button", { name: "Continue" }).click();
-    await expect(page.getByText("An account with this email already exists")).toBeVisible();
-  });
-
-  test("a created account signs in later with its email, or its mobile number, and the password", async ({ page }) => {
+  test("the same email cannot register twice, and a created account signs in later", async ({ page }) => {
     const person = unique();
     await signUp(page, person);
     await expect(page).toHaveURL(/\/account$/, { timeout: 8000 });
     await page.getByRole("button", { name: "Logout" }).click();
 
-    await signInWithPassword(page, person.email, "Wrong1234");
-    await expect(page.getByText("is incorrect")).toBeVisible();
+    await signUp(page, { ...person, email: person.email.toUpperCase() });
+    await expect(page.getByText("An account with this email already exists. Please sign in instead.")).toBeVisible();
+
+    await signIn(page, person.email, "Wrong1234");
+    await expect(page.getByText("The email or password is incorrect.")).toBeVisible();
     await page.getByLabel("Password", { exact: true }).fill("Saree2026");
     await page.getByRole("button", { name: "Sign In", exact: true }).click();
-    await expect(page.getByRole("heading", { name: /Welcome back, Test!/ })).toBeVisible();
-    await expect(page).toHaveURL(/\/account$/, { timeout: 8000 });
-    await page.getByRole("button", { name: "Logout" }).click();
-
-    await signInWithPassword(page, `+91 ${person.phone}`, "Saree2026");
     await expect(page.getByRole("heading", { name: /Welcome back, Test!/ })).toBeVisible();
   });
 
@@ -215,41 +162,29 @@ test.describe("forgot password", () => {
     await page.getByRole("link", { name: "Forgot password?" }).click();
     await expect(page.getByRole("heading", { name: "Forgot your password?", level: 1 })).toBeVisible();
     await page.getByRole("button", { name: "Send code" }).click();
-    await expect(page.getByText("Enter your email or mobile number")).toBeVisible();
-    await page.getByLabel("Email or mobile number").fill(person.email);
+    await expect(page.getByText("Enter your email address.")).toBeVisible();
+    await page.getByLabel("Email address").fill(person.email);
     await page.getByRole("button", { name: "Send code" }).click();
     await expect(page.getByRole("heading", { name: "Set a new password", level: 1 })).toBeVisible();
-    await expect(page.getByText(/b\*+@example\.com/)).toBeVisible();
 
+    await page.getByRole("button", { name: "Reset Password" }).click();
+    await expect(page.getByText("Enter the 6-digit code.")).toBeVisible();
     await page.getByLabel("Code", { exact: true }).fill("111111");
     await page.getByLabel("New password", { exact: true }).fill("NewSaree2027");
     await page.getByLabel("Confirm new password", { exact: true }).fill("NewSaree2027");
     await page.getByRole("button", { name: "Reset Password" }).click();
-    await expect(page.getByText("That code is not correct")).toBeVisible();
+    await expect(page.getByText("That code is not correct. Please check it and try again.")).toBeVisible();
 
     await page.getByLabel("Code", { exact: true }).fill(demoCode);
     await page.getByRole("button", { name: "Reset Password" }).click();
     await expect(page.getByRole("heading", { name: "Password updated" })).toBeVisible();
 
     await page.getByRole("link", { name: "Sign In", exact: true }).click();
-    await signInWithPassword(page, person.email, "Saree2026");
-    await expect(page.getByText("is incorrect")).toBeVisible();
+    await signIn(page, person.email, "Saree2026");
+    await expect(page.getByText("The email or password is incorrect.")).toBeVisible();
     await page.getByLabel("Password", { exact: true }).fill("NewSaree2027");
     await page.getByRole("button", { name: "Sign In", exact: true }).click();
     await expect(page.getByRole("heading", { name: /Welcome back, Test!/ })).toBeVisible();
-  });
-
-  test("looks the same for an account that does not exist, and the mobile number works too", async ({ page }) => {
-    await page.goto("/forgot-password");
-    await page.getByLabel("Email or mobile number").fill("98765 43210");
-    await page.getByRole("button", { name: "Send code" }).click();
-    await expect(page.getByRole("heading", { name: "Set a new password", level: 1 })).toBeVisible();
-    await expect(page.getByText(/\+91 \*+210/)).toBeVisible();
-    await page.getByLabel("Code", { exact: true }).fill(demoCode);
-    await page.getByLabel("New password", { exact: true }).fill("NewSaree2027");
-    await page.getByLabel("Confirm new password", { exact: true }).fill("NewSaree2027");
-    await page.getByRole("button", { name: "Reset Password" }).click();
-    await expect(page.getByText("That code is not correct")).toBeVisible();
   });
 });
 
@@ -269,10 +204,7 @@ test.describe("checkout needs an account", () => {
     await page.getByRole("link", { name: "Create an account" }).click();
     await expect(page).toHaveURL(/\/signup\?next=\/checkout/);
 
-    await startSignup(page, unique(), "/signup?next=/checkout");
-    await page.getByLabel("Mobile code").fill(demoCode);
-    await page.getByLabel("Email code").fill(demoCode);
-    await page.getByRole("button", { name: "Verify & Create Account" }).click();
+    await signUp(page, unique(), "/signup?next=/checkout");
     await expect(page).toHaveURL(/\/checkout$/, { timeout: 8000 });
     await expect(page.getByRole("heading", { name: "Checkout", level: 1 })).toBeVisible();
   });

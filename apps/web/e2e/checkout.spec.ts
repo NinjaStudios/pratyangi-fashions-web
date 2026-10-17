@@ -31,7 +31,7 @@ test.describe("Shop menu", () => {
 });
 
 // Checkout needs an account, so these tests start signed in (the demo session lives in localStorage).
-const signedIn = { id: "u1", name: "Test Buyer", phone: "9876543210", provider: "password" };
+const signedIn = { id: "u1", name: "Test Buyer", email: "buyer@example.com", provider: "password" };
 
 test.describe("checkout", () => {
   test.beforeEach(async ({ page }) => {
@@ -69,12 +69,44 @@ test.describe("checkout", () => {
     await expect.poll(totalOf).toBeLessThan(before + 99);
   });
 
-  test("a new address starts with the signed-in name and mobile number filled in", async ({ page }) => {
+  test("a new address starts with the account name, but the delivery mobile is its own field", async ({ page }) => {
     await page.goto("/checkout");
     await page.getByRole("button", { name: /Add New Address/ }).click();
     const dialog = page.getByRole("dialog", { name: "Add new Address" });
     await expect(dialog.getByLabel("Full Name", { exact: true })).toHaveValue("Test Buyer");
-    await expect(dialog.getByLabel("Phone Number", { exact: true })).toHaveValue("9876543210");
+    await expect(dialog.getByLabel("Phone Number", { exact: true })).toHaveValue("");
+  });
+
+  test("the address form says exactly what is wrong with each field", async ({ page }) => {
+    await page.goto("/checkout");
+    await page.getByRole("button", { name: /Add New Address/ }).click();
+    const dialog = page.getByRole("dialog", { name: "Add new Address" });
+    await dialog.getByLabel("Full Name", { exact: true }).fill("");
+    await dialog.getByRole("button", { name: "Save Address" }).click();
+    for (const message of [
+      "Enter the recipient's full name.", "Enter the delivery mobile number.", "Enter the 6-digit PIN code.",
+      "Enter the house, flat or building number.", "Enter the street, area or landmark.", "Enter the city.", "Choose the state.",
+    ]) await expect(dialog.getByText(message, { exact: true })).toBeVisible();
+
+    await dialog.getByLabel("Phone Number", { exact: true }).fill("5876543210");
+    await dialog.getByLabel("Pincode", { exact: true }).fill("012345");
+    await dialog.getByRole("button", { name: "Save Address" }).click();
+    await expect(dialog.getByText("Enter a valid 10-digit mobile number that starts with 6, 7, 8 or 9.")).toBeVisible();
+    await expect(dialog.getByText("Enter a valid 6-digit PIN code (it cannot start with 0).")).toBeVisible();
+  });
+
+  test("the delivery mobile can differ from the account, and +91 and spaces are tidied", async ({ page }) => {
+    await page.goto("/checkout");
+    await page.getByRole("button", { name: /Add New Address/ }).click();
+    const dialog = page.getByRole("dialog", { name: "Add new Address" });
+    await dialog.getByLabel("Phone Number", { exact: true }).fill("+91 98765-43210");
+    await dialog.getByLabel("Pincode", { exact: true }).fill("500001");
+    await dialog.getByRole("button", { name: "Check Pincode" }).click();
+    await dialog.getByLabel("House / Flat / Building No.", { exact: true }).fill("12");
+    await dialog.getByLabel("Street / Area / Landmark", { exact: true }).fill("Test Street");
+    await dialog.getByRole("button", { name: "Save Address" }).click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByText("+91 9876543210").first()).toBeVisible();
   });
 
   test("Add New Address opens the two-pane address dialog: My Addresses and the form", async ({ page }) => {

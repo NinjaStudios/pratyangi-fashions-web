@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,7 +10,8 @@ import { ArrowRight, BadgeCheck, Check, ChevronDown, CreditCard, Info, LockKeyho
 import { AddressDialog } from "@/components/checkout/AddressDialog";
 import { SiteFooter } from "@/components/layout/SiteFooter/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader/SiteHeader";
-import { useSession } from "@/lib/auth";
+import { apiBaseUrl, authMode, useSession } from "@/lib/auth";
+import { createApiAddressBook, createMemoryAddressBook, type AddressDraft } from "@/lib/addressBook";
 import { useBag } from "@/lib/bag";
 import { findProduct, formatInr } from "@/lib/catalog";
 import { addressLines, coupons, deliveryOptions, demoAddresses, type SavedAddress } from "@/lib/checkout";
@@ -31,8 +32,11 @@ export function CheckoutView() {
   const router = useRouter();
   const session = useSession();
   const reduceMotion = useReducedMotion();
-  const [addresses, setAddresses] = useState<SavedAddress[]>(demoAddresses);
-  const [addressId, setAddressId] = useState(demoAddresses[0].id);
+  // signed-in customers keep their addresses on the server; the opt-in demo keeps sample ones in memory
+  const book = useMemo(() => (authMode === "api" ? createApiAddressBook(apiBaseUrl) : createMemoryAddressBook(demoAddresses)), []);
+  const [addresses, setAddresses] = useState<SavedAddress[]>(authMode === "api" ? [] : demoAddresses);
+  const [addressId, setAddressId] = useState(authMode === "api" ? "" : demoAddresses[0].id);
+  const [addressesState, setAddressesState] = useState<"loading" | "ready" | "error">(authMode === "api" ? "loading" : "ready");
   const [deliveryId, setDeliveryId] = useState<"standard" | "express">("standard");
   // null = closed; { address: null } = adding a new address; { address } = editing that one
   const [dialog, setDialog] = useState<{ address: SavedAddress | null } | null>(null);
@@ -88,27 +92,46 @@ export function CheckoutView() {
     } catch { /* storage unavailable */ }
   }, []);
 
-  const saveAddress = (saved: Omit<SavedAddress, "id"> & { id?: string }) => {
-    const id = saved.id ?? `new-${Date.now()}`;
-    const next: SavedAddress = { ...saved, id };
-    setAddresses((current) => {
-      const others = current.filter((address) => address.id !== id).map((address) => (next.isDefault ? { ...address, isDefault: false } : address));
-      // an edited address stays where it was in the list; a new one goes to the end
-      const index = current.findIndex((address) => address.id === id);
-      return index === -1 ? [...others, next] : [...others.slice(0, index), next, ...others.slice(index)];
-    });
-    setAddressId(id);
+  // ---- delivery addresses (the signed-in customer's address book) ---------------------------------------------------------
+  // The customer's own: it is loaded once we know who is signed in, and every change goes through the address book.
+  const customerId = session.user?.id;
+  const loadAddresses = useCallback(async () => {
+    setAddressesState("loading");
+    try {
+      const list = await book.list();
+      setAddresses(list);
+      setAddressId((current) => (list.some((address) => address.id === current) ? current : (list.find((address) => address.isDefault) ?? list[0])?.id ?? ""));
+      setAddressesState("ready");
+    } catch {
+      setAddressesState("error");
+    }
+  }, [book]);
+  useEffect(() => {
+    if (authMode === "api" && customerId) void loadAddresses();
+  }, [customerId, loadAddresses]);
+
+  // These three throw an AddressError when the server refuses (the dialog shows the message at the right input).
+  const saveAddress = async (draft: AddressDraft) => {
+    const saved = await book.save(draft);
+    setAddresses(await book.list());
+    setAddressId(saved.id);
     setDialog(null);
-    setStatus(saved.id ? "Address updated." : "Address saved and selected for delivery.");
+    setStatus(draft.id ? "Address updated." : "Address saved and selected for delivery.");
   };
 
-  const removeAddress = (id: string) => {
-    const remaining = addresses.filter((address) => address.id !== id);
+  const removeAddress = async (id: string) => {
+    await book.remove(id);
+    const remaining = await book.list();
     setAddresses(remaining);
-    if (addressId === id) setAddressId(remaining[0]?.id ?? "");
+    if (addressId === id) setAddressId((remaining.find((address) => address.isDefault) ?? remaining[0])?.id ?? "");
   };
 
-  const makeDefault = (id: string) => setAddresses((current) => current.map((address) => ({ ...address, isDefault: address.id === id })));
+  const makeDefault = async (id: string) => {
+    setAddresses(await book.setDefault(id));
+  };
+
+  // the Delete link in the list (outside the dialog) has no dialog to show an error in, so it reports in the status line
+  const deleteFromList = (id: string) => removeAddress(id).catch((error: unknown) => setStatus(error instanceof Error ? error.message : "We could not delete that address. Please try again."));
 
   const chosenAddress = addresses.find((address) => address.id === addressId);
   const chosenDelivery = deliveryOptions.find((option) => option.id === deliveryId);
@@ -199,12 +222,19 @@ export function CheckoutView() {
                       <div className={styles.addressActions}>
                         <button type="button" onClick={() => setDialog({ address })}><Pencil size={15} aria-hidden="true" /> Edit</button>
                         <span aria-hidden="true" />
-                        <button type="button" className={styles.deleteAction} onClick={() => removeAddress(address.id)}>Delete</button>
+                        <button type="button" className={styles.deleteAction} onClick={() => deleteFromList(address.id)}>Delete</button>
                       </div>
                     </div>
                   );
                 })}
-                {!addresses.length && <p className={styles.emptyNote}>No saved addresses yet — add one to continue.</p>}
+                {addressesState === "loading" && <p className={styles.emptyNote} role="status">Loading your saved addresses…</p>}
+                {addressesState === "error" && (
+                  <p className={styles.emptyNote} role="alert">
+                    We could not load your saved addresses.{" "}
+                    <button type="button" className={styles.backLink} onClick={() => void loadAddresses()}>Try again</button>
+                  </p>
+                )}
+                {addressesState === "ready" && !addresses.length && <p className={styles.emptyNote}>No saved addresses yet — add one to continue.</p>}
               </div>
             </motion.section>
 
@@ -390,7 +420,7 @@ export function CheckoutView() {
             onDelete={removeAddress}
             onSetDefault={makeDefault}
             onClose={() => setDialog(null)}
-            prefill={{ name: session.user?.name, phone: session.user?.phone }}
+            prefill={{ name: session.user?.name }}
           />
         )}
       </AnimatePresence>

@@ -12,7 +12,7 @@ for (const width of widths) {
   test(`nothing overflows at ${width}px wide`, async ({ page }) => {
     test.setTimeout(120_000);
     // signed in, so /checkout shows the checkout rather than redirecting to sign in
-    await page.addInitScript(() => window.localStorage.setItem("pratyangi-demo-session", JSON.stringify({ id: "u1", name: "Test Buyer", phone: "9876543210", provider: "password" })));
+    await page.addInitScript(() => window.localStorage.setItem("pratyangi-demo-session", JSON.stringify({ id: "u1", name: "Test Buyer", email: "buyer@example.com", provider: "password" })));
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width, height: 800 });
     for (const path of pages) {
