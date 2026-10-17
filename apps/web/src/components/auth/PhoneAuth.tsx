@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CircleCheck } from "lucide-react";
+import { CircleCheck, LockKeyhole, ShieldCheck } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
-import { TextField } from "@/components/auth/Fields";
+import { OtpField, TextField } from "@/components/auth/Fields";
 import { GoogleButton } from "@/components/auth/GoogleButton";
 import {
   AuthError, authClient, authMode, formatPhone, googleClientId, normalisePhone, otpLength, safeNext, setSessionUser,
@@ -173,6 +173,7 @@ export function PhoneAuth({ mode }: { mode: "login" | "signup" }) {
             </button>
           </form>
 
+          <p className={styles.secure}><LockKeyhole size={14} aria-hidden="true" />Your number is only used to sign you in and is never shared.</p>
           <p className={styles.terms}>By continuing you agree to our <span className={styles.strong}>Terms &amp; Conditions</span> and <span className={styles.strong}>Privacy Policy</span>.</p>
           <p className={styles.switch}>
             {signup ? <>Already have an account? <Link href={`/login${query}`}>Sign in</Link></> : <>New to Pratyangi Fashions? <Link href={`/signup${query}`}>Create an account</Link></>}
@@ -180,6 +181,7 @@ export function PhoneAuth({ mode }: { mode: "login" | "signup" }) {
         </>
       ) : (
         <>
+          <span className={styles.badge} aria-hidden="true"><ShieldCheck size={26} /></span>
           <h1 className={styles.title}>Verify your number</h1>
           <p className={styles.lead}>
             Enter the {otpLength}-digit code sent to +91 {formatPhone(digits)}.{" "}
@@ -201,22 +203,20 @@ export function PhoneAuth({ mode }: { mode: "login" | "signup" }) {
                 required
               />
             )}
-            <TextField
+            <OtpField
               label="One-time code"
               value={code}
-              onChange={(event) => { setCode(event.target.value.replace(/\D/g, "").slice(0, otpLength)); setErrors((current) => ({ ...current, code: undefined })); }}
-              placeholder="······"
-              autoComplete="one-time-code"
-              inputMode="numeric"
-              maxLength={otpLength}
+              length={otpLength}
+              onChange={(value) => { setCode(value); setErrors((current) => ({ ...current, code: undefined })); }}
               error={errors.code}
-              required
-              labelAside={
-                <button type="button" className={styles.inlineLink} disabled={resendIn > 0 || busy} onClick={() => sendCode()}>
-                  {resendIn > 0 ? `Resend OTP in ${resendIn}s` : "Resend OTP"}
-                </button>
-              }
+              autoFocus={!isNew}
             />
+            <p className={styles.resend}>
+              Did not get the code?{" "}
+              <button type="button" className={styles.inlineLink} disabled={resendIn > 0 || busy} onClick={() => sendCode()}>
+                {resendIn > 0 ? `Resend OTP in ${resendIn}s` : "Resend OTP"}
+              </button>
+            </p>
             <button type="submit" className={styles.submit} disabled={busy}>
               {busy ? <><span className={styles.spinner} aria-hidden="true" />Verifying…</> : isNew ? "Verify & Create Account" : "Verify & Sign In"}
             </button>

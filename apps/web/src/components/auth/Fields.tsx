@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
 import styles from "./Auth.module.css";
 
@@ -28,6 +28,52 @@ export function TextField({ label, error, hint, prefix, labelAside, required, ..
         <input id={id} aria-required={required || undefined} aria-invalid={error ? true : undefined} aria-describedby={describedBy} {...input} />
       </div>
       {hint && !error && <p className={styles.hint} id={`${id}-hint`}>{hint}</p>}
+      {error && <p className={styles.error} id={`${id}-error`} role="alert">{error}</p>}
+    </div>
+  );
+}
+
+type OtpFieldProps = {
+  label: string;
+  value: string;
+  length: number;
+  onChange: (value: string) => void;
+  error?: string;
+  autoFocus?: boolean;
+};
+
+/**
+ * Six boxes that fill as the code is typed or pasted. It is one real input laid over the boxes, so the phone keyboard,
+ * paste and the SMS auto-fill suggestion (autocomplete="one-time-code") all work like any normal field.
+ */
+export function OtpField({ label, value, length, onChange, error, autoFocus }: OtpFieldProps) {
+  const id = useId();
+  const [focused, setFocused] = useState(false);
+  return (
+    <div className={styles.field}>
+      <label htmlFor={id} className={styles.required}>{label}</label>
+      <div className={`${styles.otp} ${error ? styles.otpInvalid : ""}`}>
+        <input
+          id={id}
+          className={styles.otpInput}
+          value={value}
+          onChange={(event) => onChange(event.target.value.replace(/\D/g, "").slice(0, length))}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={length}
+          autoFocus={autoFocus}
+          aria-required="true"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
+        />
+        {Array.from({ length }, (_, index) => (
+          <span key={index} aria-hidden="true" className={`${styles.otpBox} ${focused && index === Math.min(value.length, length - 1) ? styles.otpBoxActive : ""}`}>
+            {value[index] ?? ""}
+          </span>
+        ))}
+      </div>
       {error && <p className={styles.error} id={`${id}-error`} role="alert">{error}</p>}
     </div>
   );
