@@ -25,25 +25,57 @@ test("mouse wheel scrolling glides instead of jumping", async ({ page, isMobile 
   for (let i = 1; i < all.length; i++) expect(all[i]).toBeGreaterThanOrEqual(all[i - 1]);
 });
 
-test("customer reviews scroll by themselves, endlessly, and pause on hover", async ({ page, isMobile }) => {
-  await page.goto("/");
-  const track = page.locator("#reviews [class*=reviewTrack]");
-  // the track is always moving, so scroll to it directly instead of waiting for it to hold still
-  await track.evaluate((element) => element.scrollIntoView({ block: "center" }));
-  const x = () => track.evaluate((element) => new DOMMatrixReadOnly(getComputedStyle(element).transform).m41);
+test.describe("customer reviews", () => {
+  const rowOf = (page: import("@playwright/test").Page) => page.locator("#reviews [class*=reviewViewport]");
+  const left = (row: import("@playwright/test").Locator) => row.evaluate((element) => element.scrollLeft);
 
-  const first = await x();
-  await page.waitForTimeout(600);
-  expect(await x()).toBeLessThan(first); // moving left on its own
+  test("drift by themselves and loop without end", async ({ page }) => {
+    await page.goto("/");
+    const row = rowOf(page);
+    await row.evaluate((element) => element.scrollIntoView({ block: "center" }));
+    const first = await left(row);
+    await expect.poll(() => left(row), { timeout: 5000 }).toBeGreaterThan(first + 5); // moving on its own
+    // jump near the end of the middle group: it must wrap back instead of running out
+    const group = await row.evaluate((element) => element.scrollWidth / 3);
+    await row.evaluate((element, target) => { element.scrollLeft = target; }, group * 2 - 10);
+    await expect.poll(() => left(row), { timeout: 8000 }).toBeLessThan(group * 1.5);
+  });
 
-  if (!isMobile) {
-    await page.mouse.move(640, 450);
-    await track.hover({ force: true });
-    await page.waitForTimeout(150);
-    const paused = await x();
-    await page.waitForTimeout(500);
-    expect(await x()).toBe(paused);
-  }
+  test("can be scrolled by hand and keeps its place, then drifts on again", async ({ page, isMobile }) => {
+    await page.goto("/");
+    const row = rowOf(page);
+    await row.evaluate((element) => element.scrollIntoView({ block: "center" }));
+    await page.waitForTimeout(400);
+    const before = await left(row);
+    if (isMobile) {
+      await row.evaluate((element) => { element.scrollLeft += 300; });
+    } else {
+      const box = (await row.boundingBox())!;
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.wheel(400, 0); // trackpad / shift-wheel sideways scroll
+    }
+    await expect.poll(async () => Math.abs((await left(row)) - before), { timeout: 4000 }).toBeGreaterThan(150);
+  });
+
+  test("can be dragged with the mouse, and pauses while the pointer is over it", async ({ page, isMobile }) => {
+    test.skip(isMobile, "mouse only");
+    await page.goto("/");
+    const row = rowOf(page);
+    await row.evaluate((element) => element.scrollIntoView({ block: "center" }));
+    await page.waitForTimeout(400);
+    const box = (await row.boundingBox())!;
+    const y = box.y + box.height / 2;
+    await page.mouse.move(box.x + box.width / 2, y);
+    await page.waitForTimeout(200);
+    const still = await left(row);
+    await page.waitForTimeout(700);
+    expect(Math.abs((await left(row)) - still)).toBeLessThan(3); // paused under the pointer
+
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 - 200, y, { steps: 8 });
+    await page.mouse.up();
+    expect((await left(row)) - still).toBeGreaterThan(150); // dragging left moves the row forward
+  });
 });
 
 test("product cards fade up as they scroll into view", async ({ page }) => {

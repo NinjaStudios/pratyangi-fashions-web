@@ -19,8 +19,12 @@
   pointer-events: none;
 }
 
-.before {
+.beforeClip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
   clip-path: inset(0 calc(100% - var(--split)) 0 0);
+  pointer-events: none;
 }
 
 .pill {

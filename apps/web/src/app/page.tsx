@@ -10,6 +10,7 @@ import { SocialFeed } from "@/components/home/SocialFeed/SocialFeed";
 import { TryOnSection } from "@/components/home/TryOnSection/TryOnSection";
 import { ParallaxLayer } from "@/components/motion/ParallaxLayer";
 import { easeOutExpo, fadeIn, fadeUp } from "@/lib/motion/presets";
+import { useMarquee } from "@/lib/useMarquee";
 import { RevealHeading } from "@/components/motion/RevealHeading";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { SiteFooter } from "@/components/layout/SiteFooter/SiteFooter";
@@ -56,6 +57,9 @@ const joinStrip = ["FASHION INSPIRATION", "REAL STORIES", "A STRONGER COMMUNITY"
 export default function HomePage() {
   const reduceMotion = useReducedMotion();
   const categoryTrack = useRef<HTMLDivElement>(null);
+  const reviewRow = useRef<HTMLDivElement>(null);
+  // customer reviews drift on their own, and can also be scrolled, swiped or dragged by hand
+  useMarquee(reviewRow);
   const categoryRef = useRef<HTMLElement>(null);
   // The hero is pinned, so the category section covers it by exactly the distance scrolled. Progress is that
   // distance over the hero's height (the category's offsetTop inside the layered wrapper): 0 at the top of the page,
@@ -178,15 +182,16 @@ export default function HomePage() {
       <section className={styles.reviewsSection} id="reviews">
           <RevealHeading title="Loved by our Customers" href="#reviews" className={styles.sectionHeading} seeAllClassName={styles.seeAll} />
           <motion.div
-            className={styles.reviewViewport}
+            className={styles.reviewFrame}
             initial={{ opacity: 0, y: 32 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.2 }}
             transition={reduceMotion ? { duration: 0 } : { duration: 0.8, ease: easeOutExpo, delay: 0.2 }}
           >
+            <div ref={reviewRow} className={styles.reviewViewport} tabIndex={0} role="region" aria-label="Customer reviews. They scroll by themselves; scroll, swipe or drag to browse.">
             <div className={styles.reviewTrack}>
-              {[0, 1].map((copy) => (
-                <div className={styles.reviewGroup} key={copy} aria-hidden={copy === 1 ? true : undefined}>
+              {[0, 1, 2].map((copy) => (
+                <div className={styles.reviewGroup} key={copy} aria-hidden={copy > 0 ? true : undefined}>
                   {[0, 1, 2, 3, 4, 5].map((item) => (
                     <article className={styles.reviewCard} key={item}>
                       <div className={styles.reviewImage}><Image src="/images/figma/home/review-pattern.jpg" alt="" fill sizes="(max-width: 700px) 74vw, 300px" /></div>
@@ -197,6 +202,7 @@ export default function HomePage() {
                   ))}
                 </div>
               ))}
+            </div>
             </div>
           </motion.div>
         </section>

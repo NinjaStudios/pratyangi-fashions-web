@@ -296,18 +296,18 @@
   color: var(--wine);
 }
 
-/*Loved by our Customers: an endless, slow marquee. The track holds two identical groups and slides left by exactly one
-   group's width, so the loop is seamless. It pauses on hover/focus; with reduced motion it becomes a normal swipe row.*/
-.reviewViewport {
+/* Loved by our Customers: a row that drifts by itself and can be scrolled by hand (wheel, trackpad, swipe, drag, arrow
+   keys). It holds three identical groups; see useMarquee for how the loop stays seamless. The frame carries the soft
+   edges so they stay put while the row scrolls. */
+.reviewFrame {
   max-width: 1280px;
   margin: auto;
-  overflow: hidden;
   padding: 6px 0 16px;
   position: relative;
 }
 
-/* Soft edges: gradients in the section colour (cheaper than masking a moving layer). */
-.reviewViewport::before {
+.reviewFrame::before,
+.reviewFrame::after {
   content: "";
   position: absolute;
   top: 0;
@@ -315,27 +315,51 @@
   z-index: 1;
   width: 5%;
   pointer-events: none;
+}
+
+.reviewFrame::before {
   left: 0;
   background: linear-gradient(90deg, #e9e8d9, transparent);
 }
 
-.reviewViewport::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  z-index: 1;
-  width: 5%;
-  pointer-events: none;
+.reviewFrame::after {
   right: 0;
   background: linear-gradient(270deg, #e9e8d9, transparent);
+}
+
+.reviewViewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 6px 0 16px;
+  margin: -6px 0 -16px;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  cursor: grab;
+  -webkit-overflow-scrolling: touch;
+}
+
+.reviewViewport::-webkit-scrollbar {
+  display: none;
+}
+
+.reviewViewport[data-dragging="true"] {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.reviewViewport:focus-visible {
+  outline: 2px solid var(--wine);
+  outline-offset: 2px;
+}
+
+.reviewViewport img {
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .reviewTrack {
   display: flex;
   width: max-content;
-  animation: reviewMarquee 48s linear infinite;
-  will-change: transform;
 }
 
 .reviewGroup {
@@ -346,11 +370,6 @@
 
 .reviewGroup .reviewCard {
   flex: 0 0 min(240px, 64vw);
-}
-
-.reviewViewport:hover .reviewTrack,
-.reviewViewport:focus-within .reviewTrack {
-  animation-play-state: paused;
 }
 
 .reviewCard {
@@ -1705,21 +1724,8 @@ html {
   }
 }
 
-@keyframes reviewMarquee {
-  to {
-    transform: translateX(-50%);
-  }
-}
-
+/* With reduced motion the row does not move by itself, so the repeated groups are hidden: a plain scrollable list. */
 @media (prefers-reduced-motion: reduce) {
-  .reviewViewport {
-    overflow-x: auto;
-  }
-
-  .reviewTrack {
-    animation: none !important;
-  }
-
   .reviewGroup[aria-hidden="true"] {
     display: none;
   }

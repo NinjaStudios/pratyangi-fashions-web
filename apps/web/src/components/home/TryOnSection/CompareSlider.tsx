@@ -12,33 +12,49 @@ type CompareSliderProps = {
   beforeAlt: string;
   afterAlt: string;
   /**
-   * Where the middle of the face is in each picture, as a fraction of its width (0 to 1). When given, the pictures are
-   * enlarged a little and shifted so both faces sit exactly under the divider at the start: the left half of one face
-   * and the right half of the other.
+   * Where the face is in each picture. When given, each picture is scaled and placed so that both faces are the same size,
+   * their eyes sit on the same line, and the middle of each face is exactly under the divider at the start: the left half
+   * of one face joined to the right half of the other.
    */
-  beforeFaceX?: number;
-  afterFaceX?: number;
+  beforeFace?: FacePlacement;
+  afterFace?: FacePlacement;
   /** Extra controls rendered over the top-right of the "before" side. */
   beforeAction?: ReactNode;
   className?: string;
 };
 
+/** Face measurements of a picture, as fractions of that picture: x = middle of the face, eyeLine = height of the eyes, eyeGap = distance between the eyes (relative to the picture's width). */
+export type FacePlacement = { x: number; eyeLine: number; eyeGap: number };
+
+// Both pictures are drawn so the eyes are this far apart (share of the frame width) and sit this far down the frame.
+const FACE_EYE_GAP = 0.085;
+const FACE_EYE_LINE = 0.3;
+
+const placeFace = (face?: FacePlacement): CSSProperties | undefined =>
+  face && {
+    top: `${FACE_EYE_LINE * 100}%`,
+    left: "50%",
+    right: "auto",
+    bottom: "auto",
+    width: `${(FACE_EYE_GAP / face.eyeGap) * 100}%`,
+    height: "auto",
+    maxWidth: "none",
+    transform: `translate(${-face.x * 100}%, ${-face.eyeLine * 100}%)`,
+  };
+
 /** Before/after image comparison with a draggable (and keyboard-accessible) divider. */
-export function CompareSlider({ before, after, beforeLabel = "Your Photo", afterLabel = "AI Try-On", beforeAlt, afterAlt, beforeAction, beforeFaceX, afterFaceX, className }: CompareSliderProps) {
+export function CompareSlider({ before, after, beforeLabel = "Your Photo", afterLabel = "AI Try-On", beforeAlt, afterAlt, beforeAction, beforeFace, afterFace, className }: CompareSliderProps) {
   const [position, setPosition] = useState(50);
-  // 12% larger than the frame leaves room to slide a picture sideways without showing an edge
-  const zoom = 1.12;
-  const aligned = (faceX?: number): CSSProperties | undefined =>
-    faceX === undefined
-      ? undefined
-      : { top: 0, right: "auto", bottom: "auto", width: `${zoom * 100}%`, height: "auto", left: `calc(50% - ${faceX * zoom * 100}%)` };
 
   return (
     <div className={`${styles.compare} ${className ?? ""}`} style={{ "--split": `${position}%` } as CSSProperties}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className={styles.after} style={aligned(afterFaceX)} src={after} alt={afterAlt} draggable={false} />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className={styles.before} style={aligned(beforeFaceX)} src={before} alt={beforeAlt} draggable={false} />
+      <img className={styles.after} style={placeFace(afterFace)} src={after} alt={afterAlt} draggable={false} />
+      {/* the clip sits on a wrapper the size of the frame, so the seam is exactly at the divider whatever the picture's own size */}
+      <div className={styles.beforeClip}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className={styles.before} style={placeFace(beforeFace)} src={before} alt={beforeAlt} draggable={false} />
+      </div>
       <span className={`${styles.pill} ${styles.pillBefore}`}>{beforeLabel}</span>
       <span className={`${styles.pill} ${styles.pillAfter}`}>{afterLabel}</span>
       <span className={styles.divider} aria-hidden="true">

@@ -39,19 +39,29 @@ test.describe("search and menu open the catalogue filtered", () => {
 });
 
 test.describe("home page polish", () => {
-  test("both faces in the try-on slider are cut exactly in half by the divider", async ({ page }) => {
+  test("both faces in the try-on slider meet exactly at the divider, same size, eyes level", async ({ page }) => {
     await page.goto("/");
     const slider = page.locator("#try-on [class*=compare]").first();
     await slider.evaluate((element) => element.scrollIntoView({ block: "center" }));
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(600);
     const frame = (await slider.boundingBox())!;
     const centre = frame.x + frame.width / 2;
-    const faceX = async (index: number, fraction: number) => {
+    // measured on the pictures: [middle of face, eye line, eye gap], as fractions of the picture
+    const point = async (index: number, face: [number, number, number]) => {
       const box = (await slider.locator("img").nth(index).boundingBox())!;
-      return box.x + box.width * fraction;
+      return { x: box.x + box.width * face[0], y: box.y + box.height * face[1], gap: box.width * face[2] };
     };
-    expect(Math.abs((await faceX(0, 0.48)) - centre)).toBeLessThan(2); // result picture (right half)
-    expect(Math.abs((await faceX(1, 0.52)) - centre)).toBeLessThan(2); // your photo (left half)
+    const result = await point(0, [0.478, 0.1367, 0.0646]);
+    const photo = await point(1, [0.5165, 0.139, 0.0707]);
+    expect(Math.abs(result.x - centre), "result face middle under the divider").toBeLessThan(1.5);
+    expect(Math.abs(photo.x - centre), "photo face middle under the divider").toBeLessThan(1.5);
+    expect(Math.abs(result.y - photo.y), "eyes on the same line").toBeLessThan(1.5);
+    expect(Math.abs(result.gap - photo.gap), "faces the same size").toBeLessThan(1.5);
+    // and the seam between the two pictures is the divider itself: the clipped half is as wide as the frame, clipped at 50%
+    const clip = page.locator("#try-on [class*=beforeClip]").first();
+    const clipBox = (await clip.boundingBox())!;
+    expect(Math.abs(clipBox.width - frame.width)).toBeLessThan(1);
+    expect(await clip.evaluate((element) => getComputedStyle(element).clipPath)).toContain("50%");
   });
 
   test("try-on access cards leave room between title, badge, text and button", async ({ page }) => {

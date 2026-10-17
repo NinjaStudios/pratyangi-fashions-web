@@ -105,8 +105,8 @@ export function TryOnSection({ bag, onAddToBag }: TryOnSectionProps) {
           <CompareSlider
             className={styles.compare}
             before={asset("compare-photo.webp")}
-            beforeFaceX={0.52}
-            afterFaceX={0.48}
+            beforeFace={{ x: 0.5165, eyeLine: 0.139, eyeGap: 0.0707 }}
+            afterFace={{ x: 0.478, eyeLine: 0.1367, eyeGap: 0.0646 }}
             after={asset("compare-result.webp")}
             beforeAlt="Example customer photo"
             afterAlt="Example AI try-on of the customer wearing a maroon silk saree"
