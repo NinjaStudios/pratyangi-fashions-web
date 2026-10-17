@@ -33,3 +33,18 @@ export const demoProfile = {
 };
 
 export const formatOrderTotal = (value: number) => `₹${value.toLocaleString("en-IN")}`;
+
+/** 52 demo orders (13 pages of 4, as in the design): the four samples above repeated with new numbers and dates. */
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"];
+export const allDemoOrders: DemoOrder[] = Array.from({ length: 52 }, (_, index) => {
+  const base = demoOrders[index % demoOrders.length];
+  if (index < demoOrders.length) return base;
+  const month = monthNames[9 - Math.floor(index / 6) % 10];
+  const day = 1 + ((index * 7) % 27);
+  return {
+    ...base,
+    id: `PF${123456 - index}`,
+    placedOn: `${day} ${month} 2026`,
+    statusNote: base.status === "shipped" ? "Expected by 18 Oct 2026" : base.status === "cancelled" ? `Cancelled on ${day + 1} ${month} 2026` : `on ${day + 3} ${month} 2026`,
+  };
+});

@@ -40,9 +40,11 @@ export function BagView() {
       setCouponMessage("Please enter a coupon code.");
     } else if (coupons[code]) {
       setAppliedCoupon(code);
+      try { window.localStorage.setItem("pratyangi-demo-coupon", code); } catch { /* storage unavailable: the coupon simply is not carried over */ }
       setCouponMessage(`${code} applied — ${coupons[code] * 100}% off your subtotal.`);
     } else {
       setAppliedCoupon(null);
+      try { window.localStorage.removeItem("pratyangi-demo-coupon"); } catch { /* ignore */ }
       setCouponMessage(`${code} is not a valid coupon code.`);
     }
   };

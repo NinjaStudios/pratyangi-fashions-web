@@ -13,31 +13,29 @@ export const deliveryOptions: DeliveryOption[] = [
   { id: "express", name: "Express Delivery", fee: expressDeliveryFee, window: "2 - 3 business days", note: "Faster delivery" },
 ];
 
+export type AddressType = "Home" | "Office" | "Other";
+
 export type SavedAddress = {
   id: string;
-  label: string;
+  label: AddressType;
   isDefault?: boolean;
   name: string;
   phone: string;
-  lines: string;
+  house: string;
+  area: string;
+  landmark?: string;
+  city: string;
+  state: string;
+  pincode: string;
 };
+
+/** The address as one readable block of text, e.g. for the checkout list. */
+export const addressLines = (address: SavedAddress) =>
+  [address.house, address.area, address.landmark, address.city, address.state].filter(Boolean).join(", ") + " - " + address.pincode;
 
 /** Sample addresses from the Figma design, so the page can be reviewed before accounts exist. */
 export const demoAddresses: SavedAddress[] = [
-  {
-    id: "home",
-    label: "Home",
-    isDefault: true,
-    name: "Gaurav Kumar",
-    phone: "+91 9876543210",
-    lines: "50-1-16 Seethammadara Eenadu Main Road, near Sivalayam Visakhapatnam - 530013",
-  },
-  { id: "other", label: "Other", name: "Gaurav Kumar", phone: "+91 98765 43210", lines: "MG Road, Vijayawada Andhra Pradesh - 520010" },
-  {
-    id: "office",
-    label: "Office",
-    name: "Surya",
-    phone: "+91 98765 00000",
-    lines: "Level 1, Unit 2, Salarpuria Sattva Knowledge City, Sy. No. 83/1, Plot No. 2 Inorbit Mall Road, Raidurg Village, HITEC City, Hyderabad, Telangana 500081, India",
-  },
+  { id: "home", label: "Home", isDefault: true, name: "Gaurav Kumar", phone: "+91 9876543210", house: "50-1-16", area: "Seethammadara Eenadu Main Road", landmark: "near Sivalayam", city: "Visakhapatnam", state: "Andhra Pradesh", pincode: "530013" },
+  { id: "other", label: "Other", name: "Gaurav Kumar", phone: "+91 98765 43210", house: "12-4-8", area: "MG Road", city: "Vijayawada", state: "Andhra Pradesh", pincode: "520010" },
+  { id: "office", label: "Office", name: "Surya", phone: "+91 98765 00000", house: "Level 1, Unit 2, Salarpuria Sattva Knowledge City", area: "Sy. No. 83/1, Plot No. 2, Inorbit Mall Road, Raidurg Village, HITEC City", city: "Hyderabad", state: "Telangana", pincode: "500081" },
 ];

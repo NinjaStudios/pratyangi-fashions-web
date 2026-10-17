@@ -62,19 +62,66 @@ test.describe("checkout", () => {
     await expect.poll(totalOf).toBeLessThan(before + 99);
   });
 
-  test("a new address can be added and selected, and one can be deleted", async ({ page }) => {
+  test("Add New Address opens the address dialog, checks the fields, then saves and selects the address", async ({ page }) => {
     await page.goto("/checkout");
     await page.getByRole("button", { name: /Add New Address/ }).click();
-    await page.getByLabel("Full name").fill("Test Buyer");
-    await page.getByLabel("Phone").fill("9000000000");
-    await page.getByLabel("Address", { exact: true }).fill("12 Test Street, Hyderabad 500001");
-    await page.getByRole("button", { name: "Save address" }).click();
-    await expect(page.getByText("12 Test Street, Hyderabad 500001")).toBeVisible();
+    const dialog = page.getByRole("dialog", { name: "Add New Address" });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByLabel("Full name")).toBeFocused();
+
+    // empty form: every required field explains itself
+    await dialog.getByRole("button", { name: "Save Address" }).click();
+    await expect(dialog.getByRole("alert")).toHaveCount(7);
+    await expect(dialog.getByText("Enter a 6-digit pincode")).toBeVisible();
+
+    await dialog.getByLabel("Full name").fill("Test Buyer");
+    await dialog.getByLabel("Mobile number").fill("9000000000");
+    await dialog.getByLabel("Pincode").fill("500001");
+    await dialog.getByLabel("City").fill("Hyderabad");
+    await dialog.getByLabel("State").fill("Telangana");
+    await dialog.getByLabel("Flat, house no., building").fill("12");
+    await dialog.getByLabel("Area, street, village").fill("Test Street");
+    await dialog.getByText("Office", { exact: true }).click();
+    await dialog.getByText("Make this my default address").click();
+    await dialog.getByRole("button", { name: "Save Address" }).click();
+
+    await expect(dialog).toBeHidden();
+    await expect(page.getByText("12, Test Street, Hyderabad, Telangana - 500001")).toBeVisible();
+    await expect(page.getByRole("radio", { name: /Office.*DEFAULT.*Test Buyer/s })).toBeChecked();
+    // it became the only default
+    await expect(page.getByText("DEFAULT", { exact: true })).toHaveCount(1);
+  });
+
+  test("an address can be edited in the same dialog, Esc closes it, and Delete removes one", async ({ page }) => {
+    await page.goto("/checkout");
+    await page.getByRole("button", { name: /Edit/ }).first().click();
+    const dialog = page.getByRole("dialog", { name: "Edit Address" });
+    await expect(dialog.getByLabel("Full name")).toHaveValue("Gaurav Kumar");
+    await expect(dialog.getByLabel("Pincode")).toHaveValue("530013");
+    await dialog.getByLabel("Full name").fill("Gaurav K");
+    await dialog.getByRole("button", { name: "Save Address" }).click();
+    await expect(page.getByText("Gaurav K", { exact: true })).toBeVisible();
+
+    await page.getByRole("button", { name: /Add New Address/ }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toBeHidden();
+    await expect(page.getByRole("button", { name: /Add New Address/ })).toBeFocused();
 
     const deletes = page.getByRole("button", { name: "Delete" });
     const count = await deletes.count();
     await deletes.first().click();
     await expect(deletes).toHaveCount(count - 1);
+  });
+
+  test("a coupon applied in the bag is already applied at checkout", async ({ page }) => {
+    await page.goto("/bag");
+    await page.getByPlaceholder("Enter coupon code").fill("FIRST20");
+    await page.getByRole("button", { name: "Apply" }).click();
+    await expect(page.getByText(/FIRST20 applied/)).toBeVisible();
+    await page.getByRole("link", { name: /Proceed to Checkout/ }).click();
+    await expect(page.getByText("Discount (FIRST20)")).toBeVisible();
+    await expect(page.getByText(/You are saving/)).toBeVisible();
   });
 
   test("the steps move from delivery to payment to review, and placing the order is a demo", async ({ page }) => {

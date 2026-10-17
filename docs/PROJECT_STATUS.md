@@ -174,3 +174,10 @@ The six gold plinths are no longer part of `stage.webp`; each is its own image (
 
 - **Loved by our Customers** still drifts by itself, and now can also be scrolled by hand: trackpad / sideways wheel, touch swipe, mouse drag, or arrow keys. It pauses while the pointer is over it, a finger is down, it has focus or it is being dragged, and drifts on again about 2 seconds after you let go. The loop has no seam (three identical groups; see `lib/useMarquee.ts`). With reduced motion it does not move by itself but can still be scrolled.
 - **Try-on slider:** the two pictures are scaled and placed so both faces are the same size, the eyes are level, and the middle of each face is exactly under the divider (left half of your photo, right half of the AI result). The previous version also had the seam in the wrong place (clip on the enlarged picture); the clip is now on a frame-sized wrapper. The face measurements live in `TryOnSection.tsx` (`beforeFace` / `afterFace`); when you replace the sample photos, measure the new faces the same way.
+
+## Figma check: order dashboard, checkout, address dialog
+
+- **Order dashboard** ("Pratyangi Fashions order dashboard", the green "39/40" banners above it are only labels): rebuilt to the frame. Heading row with search and sort at the right, 298px sidebar with 70px rows, 954px-wide order cards with 80px thumbnails, gold "View Details" buttons, and real page numbers (‹ 1 2 3 4 5 … 13 ›, 52 demo orders). Cards and sidebar rows animate in; pages slide when you change page.
+- **Checkout:** checked against the frame. A coupon applied in the bag now carries over to checkout (the Figma frame shows a discount applied).
+- **Address dialog:** the Figma file has **no frame for it** (only the "Add new address" link). It is built from the checkout's own cards, fields and buttons: Add and Edit, validation, Home/Office/Other, default toggle, bottom sheet on phones. It needs the designer's review; update `components/checkout/AddressDialog.tsx` when the frame exists.
+- **Animations in Figma:** none are defined on these frames (the motion data is empty), so the motion follows the rest of the site.
