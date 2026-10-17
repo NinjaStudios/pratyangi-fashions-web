@@ -88,16 +88,22 @@ the server (the website never stores a token).
 
 | Method and path | Body | Success | Failure (JSON `{ message, field? }`) |
 | --- | --- | --- | --- |
-| `POST /auth/otp/send` | `{ phone }` (10 digits) | `200 { isNew }`; an SMS with a 6-digit code goes to the number | `422` invalid number (`field: "phone"`), `429` too many requests |
-| `POST /auth/otp/verify` | `{ phone, code, name? }` | `200 { user }` and session cookie; the account is created when `isNew` | `401` wrong or expired code (`field: "code"`), `422` name missing for a new number (`field: "name"`), `429` too many attempts |
+| `POST /auth/login` | `{ identifier, password }` (email or 10-digit mobile) | `200 { user }` and session cookie | `401` with one neutral message ("The email or mobile number, or the password, is incorrect.") |
+| `POST /auth/signup/start` | `{ name, email, phone, password }` | `200 { signupId }`; one code is texted to the mobile and one emailed | `409` email or mobile already used (`field: "email"` or `"phone"`), `422` invalid input |
+| `POST /auth/signup/resend` | `{ signupId, channel: "phone" | "email" }` | `204`; a new code for that channel | `429` too many requests |
+| `POST /auth/signup/verify` | `{ signupId, phoneCode, emailCode }` | `200 { user }` and session cookie; the account is created only now | `401` wrong or expired code (`field: "phoneCode"` or `"emailCode"`), `429` too many attempts |
+| `POST /auth/otp/send` | `{ phone }` | `204`; a code is texted (sign in without a password, existing accounts only) | `404` no account (`field: "phone"`), `429` too many requests |
+| `POST /auth/otp/verify` | `{ phone, code }` | `200 { user }` and session cookie | `401` wrong or expired code (`field: "code"`), `429` too many attempts |
+| `POST /auth/password/forgot` | `{ identifier }` | always `200 { resetId, sentTo }` (masked), whether or not the account exists; a code goes to the email or mobile | `429` too many requests |
+| `POST /auth/password/reset` | `{ resetId, code, password }` | `204`; the password changes and other sessions end | `401` wrong or expired code (`field: "code"`), `422` weak password |
 | `POST /auth/google` | `{ credential }` (Google ID token) | `200 { user }` and session cookie | `401` token invalid |
 | `POST /auth/logout` | none | `204` and cookie cleared | none |
 | `GET /auth/me` | none | `200 { user }` | `401` when signed out |
 
-`user` is `{ id, name, phone?, email?, provider: "phone" | "google", picture? }`.
+`user` is `{ id, name, email?, phone?, provider: "password" | "google", picture? }`.
 
-OTP rules: a random 6-digit code per request, stored hashed, valid for about 5 minutes, single use; allow 5 wrong attempts per
-code and a few sends per number per hour; a new code replaces the old one. The SMS goes through an Indian provider (MSG91,
+Code rules (mobile and email alike): a random 6-digit code per request, stored hashed, valid for about 5 minutes, single use; allow 5 wrong attempts per
+code and a few sends per number per hour; a new code replaces the old one. The email goes through a mail service (Resend, Amazon SES or Brevo; set up SPF/DKIM on the domain so it does not land in spam). The SMS goes through an Indian provider (MSG91,
 Twilio Verify or similar). India's TRAI rules require the sender ID and message template to be registered (DLT) before any OTP
 SMS is delivered, so the client should start that registration early. Keep the demo code (`123456`) out of the real server.
 

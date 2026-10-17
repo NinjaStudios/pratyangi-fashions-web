@@ -3,7 +3,7 @@ import { scrollThrough } from "./helpers";
 
 // Every page must fit every phone / tablet / laptop width: nothing wider than the screen, header icons comfortable to tap.
 const widths = [320, 360, 375, 414, 480, 600, 768, 900, 1024, 1280];
-const pages = ["/", "/new-arrivals", "/bag", "/checkout", "/account", "/account/orders", "/login", "/signup"];
+const pages = ["/", "/new-arrivals", "/bag", "/checkout", "/account", "/account/orders", "/login", "/signup", "/forgot-password"];
 
 test.describe.configure({ mode: "parallel" });
 test.skip(({ isMobile }) => isMobile, "widths are set by the test itself; the desktop project covers them");
@@ -12,7 +12,7 @@ for (const width of widths) {
   test(`nothing overflows at ${width}px wide`, async ({ page }) => {
     test.setTimeout(120_000);
     // signed in, so /checkout shows the checkout rather than redirecting to sign in
-    await page.addInitScript(() => window.localStorage.setItem("pratyangi-demo-session", JSON.stringify({ id: "u1", name: "Test Buyer", phone: "9876543210", provider: "phone" })));
+    await page.addInitScript(() => window.localStorage.setItem("pratyangi-demo-session", JSON.stringify({ id: "u1", name: "Test Buyer", phone: "9876543210", provider: "password" })));
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width, height: 800 });
     for (const path of pages) {

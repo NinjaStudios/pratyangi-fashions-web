@@ -8,6 +8,7 @@ const pages = [
   { path: "/checkout", title: "Checkout | Pratyangi Fashions" },
   { path: "/login", title: "Sign In | Pratyangi Fashions" },
   { path: "/signup", title: "Create Account | Pratyangi Fashions" },
+  { path: "/forgot-password", title: "Reset Password | Pratyangi Fashions" },
   { path: "/account", title: "My Account | Pratyangi Fashions" },
   { path: "/account/orders", title: "My Orders | Pratyangi Fashions" },
 ];
@@ -15,7 +16,7 @@ const pages = [
 for (const { path, title } of pages) {
   test(`${path} loads cleanly`, async ({ page }) => {
     // signed in, so /checkout shows the checkout rather than redirecting to sign in
-    await page.addInitScript(() => window.localStorage.setItem("pratyangi-demo-session", JSON.stringify({ id: "u1", name: "Test Buyer", phone: "9876543210", provider: "phone" })));
+    await page.addInitScript(() => window.localStorage.setItem("pratyangi-demo-session", JSON.stringify({ id: "u1", name: "Test Buyer", phone: "9876543210", provider: "password" })));
     const problems = collectProblems(page);
 
     await page.goto(path);

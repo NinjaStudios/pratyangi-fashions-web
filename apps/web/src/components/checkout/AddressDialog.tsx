@@ -19,6 +19,8 @@ type AddressDialogProps = {
   onDelete: (id: string) => void;
   onSetDefault: (id: string) => void;
   onClose: () => void;
+  /** Name and mobile of the signed-in customer: a new address starts with them filled in (they can change both). */
+  prefill?: { name?: string; phone?: string };
 };
 
 type Fields = { name: string; phone: string; pincode: string; house: string; street: string; city: string; state: string; label: string };
@@ -31,10 +33,10 @@ const typeOptions: { type: AddressType; note: string; Icon: typeof House }[] = [
 ];
 
 const blank: Fields = { name: "", phone: "", pincode: "", house: "", street: "", city: "", state: "", label: "" };
-const toFields = (address: SavedAddress | null): Fields =>
+const toFields = (address: SavedAddress | null, prefill?: { name?: string; phone?: string }): Fields =>
   address
     ? { name: address.name, phone: address.phone.replace(/^\+91\s*/, ""), pincode: address.pincode, house: address.house, street: address.street, city: address.city, state: address.state, label: address.label === address.type ? "" : address.label }
-    : blank;
+    : { ...blank, name: prefill?.name ?? "", phone: prefill?.phone ?? "" };
 
 const validate = (values: Fields): Errors => {
   const errors: Errors = {};
@@ -63,13 +65,13 @@ function IndiaFlag() {
  * Address management dialog, as designed: "My Addresses" on the left (pick one for delivery, edit, set default, delete) and
  * the "Add new Address" form on the right (also used for editing).
  */
-export function AddressDialog({ addresses, selectedId, editing, onSelect, onSave, onDelete, onSetDefault, onClose }: AddressDialogProps) {
+export function AddressDialog({ addresses, selectedId, editing, onSelect, onSave, onDelete, onSetDefault, onClose, prefill }: AddressDialogProps) {
   const reduceMotion = useReducedMotion();
   const dialogRef = useRef<HTMLDivElement>(null);
   const [editId, setEditId] = useState<string | null>(editing?.id ?? null);
   const [type, setType] = useState<AddressType>(editing?.type ?? "Home");
   const [makeDefault, setMakeDefault] = useState(editing?.isDefault ?? false);
-  const [values, setValues] = useState<Fields>(toFields(editing));
+  const [values, setValues] = useState<Fields>(toFields(editing, prefill));
   const [errors, setErrors] = useState<Errors>({});
   const [pincodeNote, setPincodeNote] = useState("");
   const [menuFor, setMenuFor] = useState<string | null>(null);
@@ -79,7 +81,7 @@ export function AddressDialog({ addresses, selectedId, editing, onSelect, onSave
     setEditId(address?.id ?? null);
     setType(address?.type ?? "Home");
     setMakeDefault(address?.isDefault ?? false);
-    setValues(toFields(address));
+    setValues(toFields(address, prefill));
     setErrors({});
     setPincodeNote("");
   };

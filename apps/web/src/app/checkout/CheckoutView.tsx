@@ -390,6 +390,7 @@ export function CheckoutView() {
             onDelete={removeAddress}
             onSetDefault={makeDefault}
             onClose={() => setDialog(null)}
+            prefill={{ name: session.user?.name, phone: session.user?.phone }}
           />
         )}
       </AnimatePresence>

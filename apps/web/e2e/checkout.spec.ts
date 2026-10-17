@@ -31,7 +31,7 @@ test.describe("Shop menu", () => {
 });
 
 // Checkout needs an account, so these tests start signed in (the demo session lives in localStorage).
-const signedIn = { id: "u1", name: "Test Buyer", phone: "9876543210", provider: "phone" };
+const signedIn = { id: "u1", name: "Test Buyer", phone: "9876543210", provider: "password" };
 
 test.describe("checkout", () => {
   test.beforeEach(async ({ page }) => {
@@ -69,6 +69,14 @@ test.describe("checkout", () => {
     await expect.poll(totalOf).toBeLessThan(before + 99);
   });
 
+  test("a new address starts with the signed-in name and mobile number filled in", async ({ page }) => {
+    await page.goto("/checkout");
+    await page.getByRole("button", { name: /Add New Address/ }).click();
+    const dialog = page.getByRole("dialog", { name: "Add new Address" });
+    await expect(dialog.getByLabel("Full Name", { exact: true })).toHaveValue("Test Buyer");
+    await expect(dialog.getByLabel("Phone Number", { exact: true })).toHaveValue("9876543210");
+  });
+
   test("Add New Address opens the two-pane address dialog: My Addresses and the form", async ({ page }) => {
     await page.goto("/checkout");
     await page.getByRole("button", { name: /Add New Address/ }).click();
@@ -94,6 +102,9 @@ test.describe("checkout", () => {
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByLabel("Full Name", { exact: true })).toBeFocused();
 
+    // name and mobile come pre-filled from the account; clear them to check every field is required
+    await dialog.getByLabel("Full Name", { exact: true }).fill("");
+    await dialog.getByLabel("Phone Number", { exact: true }).fill("");
     await dialog.getByRole("button", { name: "Save Address" }).click();
     await expect(dialog.getByRole("alert")).toHaveCount(7);
 
