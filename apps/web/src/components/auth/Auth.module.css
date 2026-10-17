@@ -7,6 +7,7 @@
 
 .stage {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
   max-width: 1280px;
   margin: 0 auto;
@@ -154,6 +155,7 @@
 
 .control input {
   flex: 1;
+  width: 0; /* the flex row sizes it; its default ~20-character width would otherwise push narrow cards wider */
   min-width: 0;
   height: 100%;
   padding: 0 14px;

@@ -338,7 +338,7 @@
 .menuBackdrop {
   position: fixed;
   inset: 0;
-  z-index: 31;
+  z-index: 29; /* just under the header, so its buttons stay usable while the menu is open */
 }
 
 /* Figma: a 1088px-wide panel starting at the left margin, columns at 80px / 340px / 564px inside it. */

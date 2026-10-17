@@ -112,6 +112,8 @@ export function SiteHeader({ bagCount }: SiteHeaderProps) {
 
   return (
     <>
+      {/* Outside the header: its entrance animation sets a transform, which would shrink a fixed backdrop to the header. */}
+      {menuOpen && <div className={styles.menuBackdrop} onMouseDown={() => setMenuOpen(false)} aria-hidden="true" />}
       <motion.header
         className={styles.header}
         initial={{ y: -24, opacity: 0 }}
@@ -146,35 +148,32 @@ export function SiteHeader({ bagCount }: SiteHeaderProps) {
         </div>
         <AnimatePresence>
           {menuOpen && (
-            <>
-              <div className={styles.menuBackdrop} onMouseDown={() => setMenuOpen(false)} aria-hidden="true" />
-              <motion.nav
-                id="shop-menu"
-                className={styles.menuPanel}
-                aria-label="Shop sections"
-                initial={reduceMotion ? false : { opacity: 0, clipPath: "inset(0 0 100% 0)" }}
-                animate={{ opacity: 1, clipPath: "inset(0 0 0% 0)" }}
-                exit={reduceMotion ? undefined : { opacity: 0, clipPath: "inset(0 0 100% 0)" }}
-                transition={reduceMotion ? { duration: 0 } : { duration: 0.42, ease: easeOutExpo }}
-              >
-                {menuGroups.map((group, groupIndex) => (
-                  <motion.div
-                    className={styles.menuGroup}
-                    key={group.title}
-                    initial={reduceMotion ? false : { opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={reduceMotion ? { duration: 0 } : { duration: 0.45, ease: easeOutExpo, delay: 0.12 + groupIndex * 0.07 }}
-                  >
-                    <h2>{group.title}</h2>
-                    <ul>
-                      {group.links.map((link) => (
-                        <li key={link.label}><Link href={link.href} onClick={() => setMenuOpen(false)}>{link.label}</Link></li>
-                      ))}
-                    </ul>
-                  </motion.div>
-                ))}
-              </motion.nav>
-            </>
+            <motion.nav
+              id="shop-menu"
+              className={styles.menuPanel}
+              aria-label="Shop sections"
+              initial={reduceMotion ? false : { opacity: 0, clipPath: "inset(0 0 100% 0)" }}
+              animate={{ opacity: 1, clipPath: "inset(0 0 0% 0)" }}
+              exit={reduceMotion ? undefined : { opacity: 0, clipPath: "inset(0 0 100% 0)" }}
+              transition={reduceMotion ? { duration: 0 } : { duration: 0.42, ease: easeOutExpo }}
+            >
+              {menuGroups.map((group, groupIndex) => (
+                <motion.div
+                  className={styles.menuGroup}
+                  key={group.title}
+                  initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={reduceMotion ? { duration: 0 } : { duration: 0.45, ease: easeOutExpo, delay: 0.12 + groupIndex * 0.07 }}
+                >
+                  <h2>{group.title}</h2>
+                  <ul>
+                    {group.links.map((link) => (
+                      <li key={link.label}><Link href={link.href} onClick={() => setMenuOpen(false)}>{link.label}</Link></li>
+                    ))}
+                  </ul>
+                </motion.div>
+              ))}
+            </motion.nav>
           )}
         </AnimatePresence>
       </motion.header>

@@ -1743,6 +1743,12 @@ html {
   .categoryPhoto img {
     transition: none;
   }
+
+  /* the scroll fade starts it at 0; without motion it is simply shown, even before the page script runs */
+  .categoryHeading {
+    opacity: 1 !important;
+    filter: none !important;
+  }
 }
 
 @media (hover: hover) {

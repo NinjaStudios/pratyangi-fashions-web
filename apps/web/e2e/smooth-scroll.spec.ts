@@ -4,6 +4,7 @@ import { expect, test } from "@playwright/test";
 test("mouse wheel scrolling glides instead of jumping", async ({ page, isMobile }) => {
   test.skip(isMobile, "touch scrolling stays native");
   await page.goto("/");
+  await expect(page.locator("html.lenis")).toBeAttached(); // Lenis is running (a slow machine may still be loading the script)
   await page.mouse.move(700, 400);
 
   // record scrollY every frame inside the page, so test speed cannot affect the result
