@@ -8,7 +8,8 @@ test.describe("order dashboard", () => {
     for (const label of ["Overview", "My Orders", "Wishlist", "Addresses", "Payment Methods", "Membership", "My Reviews", "Notifications", "Help & Support"]) {
       await expect(page.getByRole("navigation", { name: "Account sections" }).getByText(label, { exact: true })).toBeVisible();
     }
-    await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
+    // signed out (the default here) the sidebar offers sign-in where Logout sits once signed in
+    await expect(page.getByRole("link", { name: "Sign in to your account" })).toBeVisible();
     await expect(page.getByLabel("Search your orders")).toBeVisible();
     await expect(page.locator("[class*=orderCard]")).toHaveCount(4);
     const pages = page.getByRole("navigation", { name: "Order pages" });
