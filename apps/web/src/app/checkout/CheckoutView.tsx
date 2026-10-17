@@ -1,22 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, BadgeCheck, Check, ChevronDown, CreditCard, Info, LockKeyhole, MapPin, Pencil, ShieldCheck, Ticket, Trash2, Truck } from "lucide-react";
+import { AddressDialog } from "@/components/checkout/AddressDialog";
 import { SiteFooter } from "@/components/layout/SiteFooter/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader/SiteHeader";
 import { useBag } from "@/lib/bag";
 import { findProduct, formatInr } from "@/lib/catalog";
-import { coupons, deliveryOptions, demoAddresses, type SavedAddress } from "@/lib/checkout";
+import { addressLines, coupons, deliveryOptions, demoAddresses, type SavedAddress } from "@/lib/checkout";
 import { easeOutExpo } from "@/lib/motion/presets";
 import styles from "./checkout.module.css";
 
 const steps = ["Delivery", "Payment", "Review & Place Order"];
 const quantities = Array.from({ length: 10 }, (_, index) => index + 1);
-const emptyForm = { label: "Home", name: "", phone: "", lines: "" };
 const paymentMethods = [
   { id: "upi", name: "UPI", note: "Pay with GPay, PhonePe or any UPI app" },
   { id: "card", name: "Credit / Debit card", note: "Visa, Mastercard and RuPay" },
@@ -30,8 +30,8 @@ export function CheckoutView() {
   const [addresses, setAddresses] = useState<SavedAddress[]>(demoAddresses);
   const [addressId, setAddressId] = useState(demoAddresses[0].id);
   const [deliveryId, setDeliveryId] = useState<"standard" | "express">("standard");
-  const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState(emptyForm);
+  // null = closed; { address: null } = adding a new address; { address } = editing that one
+  const [dialog, setDialog] = useState<{ address: SavedAddress | null } | null>(null);
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [couponMessage, setCouponMessage] = useState("");
@@ -67,14 +67,30 @@ export function CheckoutView() {
     }
   };
 
-  const saveAddress = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!form.name.trim() || !form.phone.trim() || !form.lines.trim()) return;
-    const created: SavedAddress = { id: `new-${Date.now()}`, label: form.label, name: form.name.trim(), phone: form.phone.trim(), lines: form.lines.trim() };
-    setAddresses((current) => [...current, created]);
-    setAddressId(created.id);
-    setForm(emptyForm);
-    setAdding(false);
+  // a coupon applied in the bag carries over
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("pratyangi-demo-coupon");
+      if (saved && coupons[saved]) {
+        setAppliedCoupon(saved);
+        setCouponInput(saved);
+        setCouponMessage(`${saved} applied — ${Math.round(coupons[saved] * 100)}% off your subtotal.`);
+      }
+    } catch { /* storage unavailable */ }
+  }, []);
+
+  const saveAddress = (saved: Omit<SavedAddress, "id"> & { id?: string }) => {
+    const id = saved.id ?? `new-${Date.now()}`;
+    const next: SavedAddress = { ...saved, id };
+    setAddresses((current) => {
+      const others = current.filter((address) => address.id !== id).map((address) => (next.isDefault ? { ...address, isDefault: false } : address));
+      // an edited address stays where it was in the list; a new one goes to the end
+      const index = current.findIndex((address) => address.id === id);
+      return index === -1 ? [...others, next] : [...others.slice(0, index), next, ...others.slice(index)];
+    });
+    setAddressId(id);
+    setDialog(null);
+    setStatus(saved.id ? "Address updated." : "Address saved and selected for delivery.");
   };
 
   const removeAddress = (id: string) => {
@@ -147,27 +163,10 @@ export function CheckoutView() {
                   <h2 id="address-title">Delivery Address</h2>
                   <p>Where should we deliver your order?</p>
                 </div>
-                <button type="button" className={styles.addAddress} aria-expanded={adding} onClick={() => setAdding(!adding)}>
+                <button type="button" className={styles.addAddress} aria-haspopup="dialog" onClick={() => setDialog({ address: null })}>
                   <span aria-hidden="true">+</span> Add New Address
                 </button>
               </div>
-
-              {adding && (
-                <form className={styles.addressForm} onSubmit={saveAddress}>
-                  <label>Address type
-                    <select value={form.label} onChange={(event) => setForm({ ...form, label: event.target.value })}>
-                      <option>Home</option><option>Office</option><option>Other</option>
-                    </select>
-                  </label>
-                  <label>Full name<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} autoComplete="name" required /></label>
-                  <label>Phone<input value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} autoComplete="tel" inputMode="tel" required /></label>
-                  <label className={styles.wide}>Address<textarea rows={3} value={form.lines} onChange={(event) => setForm({ ...form, lines: event.target.value })} autoComplete="street-address" required /></label>
-                  <div className={styles.formActions}>
-                    <button type="submit" className={styles.primarySmall}>Save address</button>
-                    <button type="button" className={styles.linkButton} onClick={() => setAdding(false)}>Cancel</button>
-                  </div>
-                </form>
-              )}
 
               <div className={styles.addressList} role="radiogroup" aria-label="Saved addresses">
                 {addresses.map((address) => {
@@ -183,11 +182,11 @@ export function CheckoutView() {
                             {address.isDefault && <span className={styles.badge}>DEFAULT</span>}
                           </span>
                           <span className={styles.recipient}>{address.name}</span>
-                          <span className={styles.addressText}>{address.lines}<br />{address.phone}</span>
+                          <span className={styles.addressText}>{addressLines(address)}<br />{address.phone}</span>
                         </span>
                       </label>
                       <div className={styles.addressActions}>
-                        <button type="button" onClick={() => setStatus("Editing addresses is not available in this local demo.")}><Pencil size={15} aria-hidden="true" /> Edit</button>
+                        <button type="button" onClick={() => setDialog({ address })}><Pencil size={15} aria-hidden="true" /> Edit</button>
                         <span aria-hidden="true" />
                         <button type="button" className={styles.deleteAction} onClick={() => removeAddress(address.id)}>Delete</button>
                       </div>
@@ -262,7 +261,7 @@ export function CheckoutView() {
                 <dl className={styles.reviewList}>
                   <div>
                     <dt>Delivering to</dt>
-                    <dd>{chosenAddress ? `${chosenAddress.name} — ${chosenAddress.lines}, ${chosenAddress.phone}` : "No address selected"}</dd>
+                    <dd>{chosenAddress ? `${chosenAddress.name} — ${addressLines(chosenAddress)}, ${chosenAddress.phone}` : "No address selected"}</dd>
                     <button type="button" onClick={() => goTo(1)}>Change</button>
                   </div>
                   <div>
@@ -364,6 +363,10 @@ export function CheckoutView() {
           </motion.aside>
         </div>
       </section>
+
+      <AnimatePresence>
+        {dialog && <AddressDialog key={dialog.address?.id ?? "new"} address={dialog.address} onSave={saveAddress} onClose={() => setDialog(null)} />}
+      </AnimatePresence>
 
       <SiteFooter />
     </main>

@@ -25,6 +25,15 @@
   padding: 36px 16px 56px;
 }
 
+.headingRow {
+  display: grid;
+  gap: 16px;
+}
+
+.headerActions {
+  min-width: 0;
+}
+
 .heading h1 {
   margin: 0;
   color: #b77001;
@@ -71,7 +80,7 @@
   text-decoration: none;
   transition: background-color 200ms ease, color 200ms ease;
   flex: none;
-  grid-template-columns: 18px auto;
+  grid-template-columns: 24px auto;
   border-bottom: 0;
   border-right: 1px solid #f1e9d8;
   white-space: nowrap;
@@ -79,6 +88,11 @@
 
 .navItem:last-child {
   border-bottom: 0;
+}
+
+.navItem svg:first-child {
+  width: 22px;
+  height: 22px;
 }
 
 a.navItem:hover {
@@ -92,8 +106,7 @@ a.navActive:hover {
 }
 
 .navDisabled {
-  color: #8a8478;
-  cursor: not-allowed;
+  cursor: default;
 }
 
 .logout {
@@ -145,8 +158,19 @@ a.navActive:hover {
     padding: 0 64px;
   }
 
+  .main {
+    max-width: 1440px;
+    padding-inline: 80px;
+  }
+
+  .headingRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
   .layout {
-    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-columns: 298px minmax(0, 1fr);
+    gap: 28px;
   }
 
   .sidebar nav {
@@ -155,7 +179,11 @@ a.navActive:hover {
   }
 
   .navItem {
-    grid-template-columns: 18px 1fr 14px;
+    min-height: 70px;
+    padding: 0 16px;
+    font-size: 16px;
+    grid-template-columns: 24px 1fr 15px;
+    gap: 14px;
     border-right: revert;
     border-bottom: 1px solid #f1e9d8;
     flex: revert;

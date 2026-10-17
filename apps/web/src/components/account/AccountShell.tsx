@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Bell, ChevronRight, CreditCard, Crown, Headset, Heart, House, LogOut, MapPin, Package, Star,
   type LucideIcon,
@@ -9,7 +10,10 @@ import {
 import { SiteFooter } from "@/components/layout/SiteFooter/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader/SiteHeader";
 import { useBag } from "@/lib/bag";
+import { easeOutExpo } from "@/lib/motion/presets";
 import styles from "./AccountShell.module.css";
+
+const MotionLink = motion.create(Link);
 
 type NavItem = { key: string; label: string; Icon: LucideIcon; href?: string };
 
@@ -29,11 +33,20 @@ type AccountShellProps = {
   active: "overview" | "orders";
   title: string;
   subtitle: string;
+  /** Controls shown at the right of the page heading (the orders page puts search and sort here). */
+  headerActions?: ReactNode;
   children: ReactNode;
 };
 
-export function AccountShell({ active, title, subtitle, children }: AccountShellProps) {
+export function AccountShell({ active, title, subtitle, headerActions, children }: AccountShellProps) {
   const bag = useBag();
+  const reduceMotion = useReducedMotion();
+  // sidebar rows slide in one after another; the same hidden state with or without reduced motion
+  const row = (index: number) => ({
+    initial: { opacity: 0, x: -18 },
+    animate: { opacity: 1, x: 0 },
+    transition: reduceMotion ? { duration: 0 } : { duration: 0.5, ease: easeOutExpo, delay: 0.1 + index * 0.05 },
+  });
 
   return (
     <div className={styles.page}>
@@ -43,32 +56,39 @@ export function AccountShell({ active, title, subtitle, children }: AccountShell
       </div>
       <SiteHeader bagCount={bag.count} />
       <main className={styles.main}>
-        <header className={styles.heading}>
-          <h1>{title}</h1>
-          <p>{subtitle}</p>
+        <header className={styles.headingRow}>
+          <motion.div className={styles.heading} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={reduceMotion ? { duration: 0 } : { duration: 0.6, ease: easeOutExpo }}>
+            <h1>{title}</h1>
+            <p>{subtitle}</p>
+          </motion.div>
+          {headerActions && (
+            <motion.div className={styles.headerActions} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={reduceMotion ? { duration: 0 } : { duration: 0.6, ease: easeOutExpo, delay: 0.1 }}>
+              {headerActions}
+            </motion.div>
+          )}
         </header>
         <div className={styles.layout}>
           <aside className={styles.sidebar}>
             <nav aria-label="Account sections">
-              {navItems.map(({ key, label, Icon, href }) => {
+              {navItems.map(({ key, label, Icon, href }, index) => {
                 const content = (
                   <>
-                    <Icon size={18} strokeWidth={1.6} aria-hidden="true" />
+                    <Icon size={24} strokeWidth={1.5} aria-hidden="true" />
                     <span>{label}</span>
-                    <ChevronRight size={14} aria-hidden="true" />
+                    <ChevronRight size={15} aria-hidden="true" />
                   </>
                 );
                 if (!href) {
                   return (
-                    <span key={key} className={`${styles.navItem} ${styles.navDisabled}`} aria-disabled="true" title="Not available yet">
+                    <motion.span key={key} className={`${styles.navItem} ${styles.navDisabled}`} aria-disabled="true" title="Not available yet" {...row(index)}>
                       {content}
-                    </span>
+                    </motion.span>
                   );
                 }
                 return (
-                  <Link key={key} href={href} className={`${styles.navItem} ${key === active ? styles.navActive : ""}`} aria-current={key === active ? "page" : undefined}>
+                  <MotionLink key={key} href={href} className={`${styles.navItem} ${key === active ? styles.navActive : ""}`} aria-current={key === active ? "page" : undefined} {...row(index)}>
                     {content}
-                  </Link>
+                  </MotionLink>
                 );
               })}
             </nav>
