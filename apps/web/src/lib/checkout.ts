@@ -17,25 +17,48 @@ export type AddressType = "Home" | "Office" | "Other";
 
 export type SavedAddress = {
   id: string;
-  label: AddressType;
+  /** Home, Office or Other. */
+  type: AddressType;
+  /** What the address is called in lists: the optional custom label (for example "PG"), else the type. */
+  label: string;
   isDefault?: boolean;
   name: string;
+  /** Always stored as "+91 " followed by the ten digits. */
   phone: string;
   house: string;
-  area: string;
-  landmark?: string;
+  /** Street, area and landmark in one line. */
+  street: string;
   city: string;
   state: string;
   pincode: string;
 };
 
 /** The address as one readable block of text, e.g. for the checkout list. */
-export const addressLines = (address: SavedAddress) =>
-  [address.house, address.area, address.landmark, address.city, address.state].filter(Boolean).join(", ") + " - " + address.pincode;
+export const addressLines = (address: SavedAddress) => [address.house, address.street, address.city, address.state].filter(Boolean).join(", ") + " - " + address.pincode;
 
 /** Sample addresses from the Figma design, so the page can be reviewed before accounts exist. */
 export const demoAddresses: SavedAddress[] = [
-  { id: "home", label: "Home", isDefault: true, name: "Gaurav Kumar", phone: "+91 9876543210", house: "50-1-16", area: "Seethammadara Eenadu Main Road", landmark: "near Sivalayam", city: "Visakhapatnam", state: "Andhra Pradesh", pincode: "530013" },
-  { id: "other", label: "Other", name: "Gaurav Kumar", phone: "+91 98765 43210", house: "12-4-8", area: "MG Road", city: "Vijayawada", state: "Andhra Pradesh", pincode: "520010" },
-  { id: "office", label: "Office", name: "Surya", phone: "+91 98765 00000", house: "Level 1, Unit 2, Salarpuria Sattva Knowledge City", area: "Sy. No. 83/1, Plot No. 2, Inorbit Mall Road, Raidurg Village, HITEC City", city: "Hyderabad", state: "Telangana", pincode: "500081" },
+  { id: "home", type: "Home", label: "Home", isDefault: true, name: "Gaurav Kumar", phone: "+91 9876543210", house: "50-1-16", street: "Seethammadara, Eenadu Main Road, near Sivalayam", city: "Visakhapatnam", state: "Andhra Pradesh", pincode: "530013" },
+  { id: "office", type: "Office", label: "Office", name: "Gaurav Kumar", phone: "+91 9876543210", house: "Level 1, Unit 2, Knowledge City", street: "HITC City", city: "Hyderabad", state: "Telangana", pincode: "500081" },
+  { id: "pg", type: "Other", label: "PG", name: "Gaurav Kumar", phone: "+91 9876543210", house: "Room 12, Sunrise PG", street: "HITC City", city: "Hyderabad", state: "Telangana", pincode: "500081" },
 ];
+
+export const indianStates = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
+  "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan",
+  "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands",
+  "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry",
+];
+
+/** Demo pincode check (no postal service is connected yet): a few well-known pincodes fill in the city and state. */
+export const demoPincodes: Record<string, { city: string; state: string }> = {
+  "530013": { city: "Visakhapatnam", state: "Andhra Pradesh" },
+  "520010": { city: "Vijayawada", state: "Andhra Pradesh" },
+  "500081": { city: "Hyderabad", state: "Telangana" },
+  "500001": { city: "Hyderabad", state: "Telangana" },
+  "560001": { city: "Bengaluru", state: "Karnataka" },
+  "600001": { city: "Chennai", state: "Tamil Nadu" },
+  "400001": { city: "Mumbai", state: "Maharashtra" },
+  "110001": { city: "New Delhi", state: "Delhi" },
+  "700001": { city: "Kolkata", state: "West Bengal" },
+};

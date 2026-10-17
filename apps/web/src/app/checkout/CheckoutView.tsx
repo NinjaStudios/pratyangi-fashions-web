@@ -99,6 +99,8 @@ export function CheckoutView() {
     if (addressId === id) setAddressId(remaining[0]?.id ?? "");
   };
 
+  const makeDefault = (id: string) => setAddresses((current) => current.map((address) => ({ ...address, isDefault: address.id === id })));
+
   const chosenAddress = addresses.find((address) => address.id === addressId);
   const chosenDelivery = deliveryOptions.find((option) => option.id === deliveryId);
   const chosenPayment = paymentMethods.find((method) => method.id === paymentId);
@@ -365,7 +367,18 @@ export function CheckoutView() {
       </section>
 
       <AnimatePresence>
-        {dialog && <AddressDialog key={dialog.address?.id ?? "new"} address={dialog.address} onSave={saveAddress} onClose={() => setDialog(null)} />}
+        {dialog && (
+          <AddressDialog
+            addresses={addresses}
+            selectedId={addressId}
+            editing={dialog.address}
+            onSelect={setAddressId}
+            onSave={saveAddress}
+            onDelete={removeAddress}
+            onSetDefault={makeDefault}
+            onClose={() => setDialog(null)}
+          />
+        )}
       </AnimatePresence>
 
       <SiteFooter />

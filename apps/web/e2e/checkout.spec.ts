@@ -62,52 +62,87 @@ test.describe("checkout", () => {
     await expect.poll(totalOf).toBeLessThan(before + 99);
   });
 
-  test("Add New Address opens the address dialog, checks the fields, then saves and selects the address", async ({ page }) => {
+  test("Add New Address opens the two-pane address dialog: My Addresses and the form", async ({ page }) => {
     await page.goto("/checkout");
     await page.getByRole("button", { name: /Add New Address/ }).click();
-    const dialog = page.getByRole("dialog", { name: "Add New Address" });
+    const dialog = page.getByRole("dialog", { name: "Add new Address" });
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByLabel("Full name")).toBeFocused();
+    await expect(dialog.getByRole("heading", { name: "My Addresses" })).toBeVisible();
+    await expect(dialog.getByText("Manage your delivery addresses for a faster checkout.")).toBeVisible();
+    // the saved addresses from the design: Home (default), Office and PG
+    for (const label of ["Edit Home address", "Edit Office address", "Edit PG address"]) await expect(dialog.getByRole("button", { name: label })).toBeVisible();
+    await expect(dialog.getByText("Default", { exact: true })).toBeVisible();
+    await expect(dialog.getByRole("radio", { name: /Home/ }).first()).toBeChecked();
+    // the form
+    for (const label of ["Full Name", "Phone Number", "Pincode", "House / Flat / Building No.", "Street / Area / Landmark", "City", "Address Type Label (Optional)"]) {
+      await expect(dialog.getByLabel(label, { exact: true })).toBeVisible();
+    }
+    await expect(dialog.getByRole("button", { name: "Check Pincode" })).toBeVisible();
+    await expect(dialog.getByText("This address will be selected by default at checkout.")).toBeVisible();
+  });
 
-    // empty form: every required field explains itself
+  test("the address form checks its fields, then saves, selects and defaults the new address", async ({ page }) => {
+    await page.goto("/checkout");
+    await page.getByRole("button", { name: /Add New Address/ }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByLabel("Full Name", { exact: true })).toBeFocused();
+
     await dialog.getByRole("button", { name: "Save Address" }).click();
     await expect(dialog.getByRole("alert")).toHaveCount(7);
-    await expect(dialog.getByText("Enter a 6-digit pincode")).toBeVisible();
 
-    await dialog.getByLabel("Full name").fill("Test Buyer");
-    await dialog.getByLabel("Mobile number").fill("9000000000");
-    await dialog.getByLabel("Pincode").fill("500001");
-    await dialog.getByLabel("City").fill("Hyderabad");
-    await dialog.getByLabel("State").fill("Telangana");
-    await dialog.getByLabel("Flat, house no., building").fill("12");
-    await dialog.getByLabel("Area, street, village").fill("Test Street");
-    await dialog.getByText("Office", { exact: true }).click();
-    await dialog.getByText("Make this my default address").click();
+    await dialog.getByLabel("Full Name", { exact: true }).fill("Test Buyer");
+    await dialog.getByLabel("Phone Number", { exact: true }).fill("9000000000");
+    await dialog.getByLabel("Pincode", { exact: true }).fill("500001");
+    await dialog.getByRole("button", { name: "Check Pincode" }).click();
+    await expect(dialog.getByText("Delivery available in Hyderabad, Telangana")).toBeVisible();
+    await expect(dialog.getByLabel("City", { exact: true })).toHaveValue("Hyderabad"); // filled in by the pincode check
+    await expect(dialog.getByLabel("State", { exact: true })).toHaveValue("Telangana");
+    await dialog.getByLabel("House / Flat / Building No.", { exact: true }).fill("12");
+    await dialog.getByLabel("Street / Area / Landmark", { exact: true }).fill("Test Street");
+    await dialog.getByRole("radio", { name: /For workplace delivery/ }).check({ force: true });
+    await dialog.getByLabel("Address Type Label (Optional)", { exact: true }).fill("Studio");
+    await dialog.getByText("Set as default address").click();
     await dialog.getByRole("button", { name: "Save Address" }).click();
 
     await expect(dialog).toBeHidden();
     await expect(page.getByText("12, Test Street, Hyderabad, Telangana - 500001")).toBeVisible();
-    await expect(page.getByRole("radio", { name: /Office.*DEFAULT.*Test Buyer/s })).toBeChecked();
-    // it became the only default
+    await expect(page.getByRole("radio", { name: /Studio.*DEFAULT.*Test Buyer/s })).toBeChecked();
     await expect(page.getByText("DEFAULT", { exact: true })).toHaveCount(1);
   });
 
-  test("an address can be edited in the same dialog, Esc closes it, and Delete removes one", async ({ page }) => {
+  test("in the dialog an address can be edited, set as default or deleted, and Esc closes it", async ({ page }) => {
     await page.goto("/checkout");
-    await page.getByRole("button", { name: /Edit/ }).first().click();
-    const dialog = page.getByRole("dialog", { name: "Edit Address" });
-    await expect(dialog.getByLabel("Full name")).toHaveValue("Gaurav Kumar");
-    await expect(dialog.getByLabel("Pincode")).toHaveValue("530013");
-    await dialog.getByLabel("Full name").fill("Gaurav K");
-    await dialog.getByRole("button", { name: "Save Address" }).click();
-    await expect(page.getByText("Gaurav K", { exact: true })).toBeVisible();
-
     await page.getByRole("button", { name: /Add New Address/ }).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+    const dialog = page.getByRole("dialog");
+
+    await dialog.getByRole("button", { name: "Edit PG address" }).click();
+    await expect(dialog.getByRole("heading", { name: "Edit Address" })).toBeVisible();
+    await expect(dialog.getByLabel("Address Type Label (Optional)", { exact: true })).toHaveValue("PG");
+    await expect(dialog.getByLabel("House / Flat / Building No.", { exact: true })).toHaveValue("Room 12, Sunrise PG");
+
+    await dialog.getByRole("button", { name: "More options for Office" }).click();
+    await dialog.getByRole("menuitem", { name: "Set as default" }).click();
+    await expect(dialog.locator("[class*=card]").filter({ hasText: "Office" }).getByText("Default", { exact: true })).toBeVisible();
+
+    await expect(dialog.getByRole("menu")).toHaveCount(0); // the first menu has finished closing
+    await dialog.getByRole("button", { name: "More options for PG" }).click();
+    await dialog.getByRole("menuitem", { name: "Delete" }).click();
+    await expect(dialog.getByRole("button", { name: "Edit PG address" })).toHaveCount(0);
+
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toBeHidden();
     await expect(page.getByRole("button", { name: /Add New Address/ })).toBeFocused();
+  });
 
+  test("Edit on the checkout list opens the dialog on that address", async ({ page }) => {
+    await page.goto("/checkout");
+    await page.getByRole("button", { name: /Edit/ }).first().click();
+    const dialog = page.getByRole("dialog", { name: "Edit Address" });
+    await expect(dialog.getByLabel("Full Name", { exact: true })).toHaveValue("Gaurav Kumar");
+    await expect(dialog.getByLabel("Pincode", { exact: true })).toHaveValue("530013");
+    await dialog.getByLabel("Full Name", { exact: true }).fill("Gaurav K");
+    await dialog.getByRole("button", { name: "Save Address" }).click();
+    await expect(page.getByText("Gaurav K", { exact: true })).toBeVisible();
     const deletes = page.getByRole("button", { name: "Delete" });
     const count = await deletes.count();
     await deletes.first().click();
