@@ -1,19 +1,29 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { SiteFooter } from "@/components/layout/SiteFooter/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader/SiteHeader";
+import { PriceRange } from "@/components/ui/PriceRange/PriceRange";
 import { ProductCard } from "@/components/ui/ProductCard/ProductCard";
 import { useBag } from "@/lib/bag";
 import { colors, fabrics, newArrivals, occasions, shopCategories } from "@/lib/catalog";
 import styles from "./new-arrivals.module.css";
 
 const pageSize = 9;
-const priceStops = [5000, 15000, 40000, 70000, 100000, 1000000];
+// the slider spans the cheapest to the dearest saree, rounded outwards
+const priceStep = 500;
+const priceMin = Math.floor(Math.min(...newArrivals.map((product) => product.priceInr)) / 1000) * 1000;
+const priceMax = Math.ceil(Math.max(...newArrivals.map((product) => product.priceInr)) / 5000) * 5000;
+const pricePresets = [
+  { low: null, high: 10000 },
+  { low: 10000, high: 25000 },
+  { low: 25000, high: 50000 },
+  { low: 50000, high: 100000 },
+  { low: 100000, high: null },
+] as const;
 const sortOptions = [
   { value: "newest", label: "Newest First" },
   { value: "price-asc", label: "Price: Low to High" },
@@ -63,7 +73,8 @@ export function NewArrivalsView() {
     if (window.matchMedia("(max-width: 700px)").matches && !new URLSearchParams(window.location.search).size) setFiltersOpen(false);
   }, []);
   const [category, setCategory] = useState<string | null>(null);
-  const [priceIndex, setPriceIndex] = useState(priceStops.length - 1);
+  const [priceLow, setPriceLow] = useState(priceMin);
+  const [priceHigh, setPriceHigh] = useState(priceMax);
   const [selectedFabrics, setSelectedFabrics] = useState<string[]>([]);
   const [showAllFabrics, setShowAllFabrics] = useState(false);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
@@ -73,11 +84,11 @@ export function NewArrivalsView() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
 
-  const maxPrice = priceStops[priceIndex];
   const filtered = newArrivals
     .filter((product) => (
       (!category || product.category === category)
-      && product.priceInr <= maxPrice
+      && product.priceInr >= priceLow
+      && product.priceInr <= priceHigh
       && (!selectedFabrics.length || selectedFabrics.includes(product.fabric))
       && (!selectedColors.length || selectedColors.includes(product.color))
       && (!selectedOccasions.length || selectedOccasions.includes(product.occasion))
@@ -88,7 +99,7 @@ export function NewArrivalsView() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const visible = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  const hasFilters = category || priceIndex !== priceStops.length - 1 || selectedFabrics.length || selectedColors.length || selectedOccasions.length || inStockOnly;
+  const hasFilters = category || priceLow !== priceMin || priceHigh !== priceMax || selectedFabrics.length || selectedColors.length || selectedOccasions.length || inStockOnly;
 
   const update = <T,>(setter: (value: T) => void) => (value: T) => { setter(value); setPage(1); };
 
@@ -102,7 +113,8 @@ export function NewArrivalsView() {
 
   const clearFilters = () => {
     setCategory(null);
-    setPriceIndex(priceStops.length - 1);
+    setPriceLow(priceMin);
+    setPriceHigh(priceMax);
     setSelectedFabrics([]);
     setSelectedColors([]);
     setSelectedOccasions([]);
@@ -160,20 +172,15 @@ export function NewArrivalsView() {
             {filtersOpen && (
               <div className={styles.filters}>
                 <div className={`${styles.filterGroup} ${styles.priceGroup}`}>
-                  <label className={styles.priceTitle} htmlFor="price-range">Price Range</label>
-                  <input
-                    id="price-range"
-                    className={styles.slider}
-                    type="range"
-                    min={0}
-                    max={priceStops.length - 1}
-                    step={1}
-                    value={priceIndex}
-                    aria-valuetext={`Up to ${priceLabel(maxPrice)}`}
-                    style={{ "--fill": `${(priceIndex / (priceStops.length - 1)) * 100}%` } as CSSProperties}
-                    onChange={(event) => update(setPriceIndex)(Number(event.target.value))}
+                  <PriceRange
+                    min={priceMin}
+                    max={priceMax}
+                    step={priceStep}
+                    low={priceLow}
+                    high={priceHigh}
+                    presets={pricePresets}
+                    onChange={(low, high) => { setPriceLow(low); setPriceHigh(high); setPage(1); }}
                   />
-                  <div className={styles.priceLabels}><span>{priceLabel(priceStops[0])}</span><span>{priceLabel(maxPrice)}</span></div>
                 </div>
 
                 <div className={styles.filterGroup} role="group" aria-label="Fabric">

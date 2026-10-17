@@ -116,65 +116,8 @@
 }
 
 .priceGroup {
+  width: 100%;
   padding-top: 32px;
-}
-
-.priceTitle {
-  color: #242321;
-  font: 700 16px/normal var(--font-display);
-}
-
-.slider {
-  --fill: 100%;
-  appearance: none;
-  width: 100%;
-  height: 18px;
-  margin: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.slider::-webkit-slider-runnable-track {
-  height: 5px;
-  border-radius: 10px;
-  background: linear-gradient(to right, var(--burgundy) var(--fill), #fff var(--fill));
-}
-
-.slider::-moz-range-track {
-  height: 5px;
-  border-radius: 10px;
-  background: #fff;
-}
-
-.slider::-moz-range-progress {
-  height: 5px;
-  border-radius: 10px;
-  background: var(--burgundy);
-}
-
-.slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  margin-top: -6.5px;
-  border: 0;
-  background: url("/images/figma/slider-handle.svg") center / contain no-repeat;
-}
-
-.slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border: 0;
-  border-radius: 50%;
-  background: url("/images/figma/slider-handle.svg") center / contain no-repeat;
-}
-
-.priceLabels {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  color: #242321;
-  font-size: 14px;
 }
 
 .choice {
