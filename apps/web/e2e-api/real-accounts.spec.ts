@@ -1,6 +1,21 @@
+import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 
-const apiUrl = "http://localhost:4001";
+const apiUrl = "http://localhost:4001/api/v1";
+
+/** The API runs with no SMTP, so it prints each email to its console, which the config writes to this file. */
+async function emailTo(address: string, pattern: RegExp): Promise<string> {
+  for (let attempt = 0; attempt < 40; attempt++) {
+    try {
+      const log = readFileSync("../api/api-e2e.log", "utf8");
+      const at = log.lastIndexOf(`To: ${address}`);
+      const found = at >= 0 ? pattern.exec(log.slice(at, at + 900)) : null;
+      if (found?.[1]) return found[1];
+    } catch { /* the file may not exist yet */ }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  throw new Error(`no email to ${address} matching ${pattern}`);
+}
 const rand = () => Math.floor(100000000 + Math.random() * 899999999);
 const unique = (name = "Meera Kumar") => ({ name, email: `real${Date.now()}${rand()}@example.com`, password: "Saree2026" });
 type Person = ReturnType<typeof unique>;
@@ -80,12 +95,64 @@ test.describe("real accounts (store API + MySQL)", () => {
     await expect(page.getByRole("heading", { name: /Welcome back, Meera!/ })).toBeVisible();
   });
 
-  test("password reset works through the development mailer, which prints the code on the server console", async ({ page }) => {
+  test("email verification: the account page asks for it, the emailed link verifies it once, and a reused link says so", async ({ page }) => {
+    const person = unique();
+    await signUp(page, person);
+    await expect(page.getByRole("heading", { name: "Welcome, Meera!" })).toBeVisible();
+    await expect(page).toHaveURL(/:3100\/account$/, { timeout: 10_000 });
+    const notice = page.getByRole("region", { name: "Email verification" });
+    await expect(notice).toContainText(person.email);
+
+    const token = await emailTo(person.email, /verify-email\?token=([\w-]+)/);
+    await page.goto(`/verify-email?token=${token}`);
+    await expect(page.getByRole("heading", { name: "Email verified" })).toBeVisible();
+    await page.getByRole("link", { name: "Go to my account" }).click();
+    await expect(page.getByRole("heading", { name: "Hello, Meera" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Email verification" })).toHaveCount(0);
+
+    await page.goto(`/verify-email?token=${token}`);
+    await expect(page.getByRole("heading", { name: "This link did not work" })).toBeVisible();
+    await expect(page.getByRole("alert").filter({ hasText: "invalid, has expired or was already used" })).toBeVisible();
+  });
+
+  test("a customer can ask for a new link, and the old one stops working", async ({ page }) => {
+    const person = unique();
+    await signUp(page, person);
+    await expect(page).toHaveURL(/:3100\/account$/, { timeout: 10_000 });
+    const first = await emailTo(person.email, /verify-email\?token=([\w-]+)/);
+    await page.getByRole("button", { name: "Send a new link" }).click();
+    await expect(page.getByText("We have sent a new verification link to your email.")).toBeVisible();
+    await expect.poll(() => emailTo(person.email, /verify-email\?token=([\w-]+)/)).not.toBe(first);
+    await page.goto(`/verify-email?token=${first}`);
+    await expect(page.getByRole("heading", { name: "This link did not work" })).toBeVisible();
+  });
+
+  test("password reset end to end: the emailed code sets a new password and the old one stops working", async ({ page }) => {
+    const person = unique();
+    await signUp(page, person);
+    await expect(page).toHaveURL(/:3100\/account$/, { timeout: 10_000 });
+    await page.getByRole("button", { name: "Logout" }).click();
+
     await page.goto("/forgot-password");
-    await page.getByLabel("Email address").fill("someone@example.com");
+    await page.getByLabel("Email address").fill(person.email);
     await page.getByRole("button", { name: "Send code" }).click();
-    // development server with no SMTP prints the code to its console and still answers; the page moves on
     await expect(page.getByRole("heading", { name: "Set a new password", level: 1 })).toBeVisible();
+    const code = await emailTo(person.email, /Your code is (\d{6})/);
+
+    await page.getByLabel("Code", { exact: true }).fill(code === "000000" ? "111111" : "000000");
+    await page.getByLabel("New password", { exact: true }).fill("NewSaree2027");
+    await page.getByLabel("Confirm new password", { exact: true }).fill("NewSaree2027");
+    await page.getByRole("button", { name: "Reset Password" }).click();
+    await expect(page.getByText("That code is not correct. Please check it and try again.")).toBeVisible();
+
+    await page.getByLabel("Code", { exact: true }).fill(code);
+    await page.getByRole("button", { name: "Reset Password" }).click();
+    await expect(page.getByRole("heading", { name: "Password updated" })).toBeVisible();
+
+    await signIn(page, person);
+    await expect(page.getByText("The email or password is incorrect.")).toBeVisible();
+    await signIn(page, person, "NewSaree2027");
+    await expect(page.getByRole("heading", { name: /Welcome back, Meera!/ })).toBeVisible();
   });
 
   test("checkout needs an account; addresses are saved on the server and stay private to the customer", async ({ page, browser }) => {

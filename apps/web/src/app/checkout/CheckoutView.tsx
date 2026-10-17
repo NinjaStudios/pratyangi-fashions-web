@@ -10,7 +10,7 @@ import { ArrowRight, BadgeCheck, Check, ChevronDown, CreditCard, Info, LockKeyho
 import { AddressDialog } from "@/components/checkout/AddressDialog";
 import { SiteFooter } from "@/components/layout/SiteFooter/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader/SiteHeader";
-import { apiBaseUrl, authMode, useSession } from "@/lib/auth";
+import { apiRoot, authMode, useSession } from "@/lib/auth";
 import { createApiAddressBook, createMemoryAddressBook, type AddressDraft } from "@/lib/addressBook";
 import { useBag } from "@/lib/bag";
 import { findProduct, formatInr } from "@/lib/catalog";
@@ -33,7 +33,7 @@ export function CheckoutView() {
   const session = useSession();
   const reduceMotion = useReducedMotion();
   // signed-in customers keep their addresses on the server; the opt-in demo keeps sample ones in memory
-  const book = useMemo(() => (authMode === "api" ? createApiAddressBook(apiBaseUrl) : createMemoryAddressBook(demoAddresses)), []);
+  const book = useMemo(() => (authMode === "api" ? createApiAddressBook(apiRoot) : createMemoryAddressBook(demoAddresses)), []);
   const [addresses, setAddresses] = useState<SavedAddress[]>(authMode === "api" ? [] : demoAddresses);
   const [addressId, setAddressId] = useState(authMode === "api" ? "" : demoAddresses[0].id);
   const [addressesState, setAddressesState] = useState<"loading" | "ready" | "error">(authMode === "api" ? "loading" : "ready");

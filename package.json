@@ -11,6 +11,7 @@
     "test": "pnpm --filter pratyangi-web run test:e2e",
     "api:dev": "pnpm --filter pratyangi-api run dev",
     "api:migrate": "pnpm --filter pratyangi-api run migrate",
+    "api:migrate:dev": "pnpm --filter pratyangi-api run migrate:dev",
     "api:test": "pnpm --filter pratyangi-api run test",
     "api:typecheck": "pnpm --filter pratyangi-api run typecheck",
     "test:ui": "pnpm --filter pratyangi-web run test:e2e:ui",

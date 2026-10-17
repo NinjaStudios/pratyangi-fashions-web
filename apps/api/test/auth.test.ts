@@ -1,11 +1,13 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import request from "supertest";
+import { apiPrefix } from "../src/app.js";
+import { Prisma } from "@prisma/client";
 import { browser, db, googleToken, makeApp, origin, person, resetDatabase } from "./helpers.js";
 
 beforeEach(resetDatabase);
-afterAll(() => db.end());
+afterAll(() => db.$disconnect());
 
-const count = async (sql: string, params: (string | number)[] = []) => Number(((await db.execute(sql, params))[0] as { n: number }[])[0]?.n);
+const customers = () => db.customer.count();
 
 describe("email signup", () => {
   it("creates the account, signs in with an httpOnly cookie, and never returns or stores the plain password", async () => {
@@ -14,7 +16,7 @@ describe("email signup", () => {
     const res = await me.post("/auth/signup", person());
     expect(res.status).toBe(201);
     expect(res.body.user).toMatchObject({ name: "Test Buyer 1", email: "buyer1@example.com", provider: "password" });
-    expect(Object.keys(res.body.user).sort()).toEqual(["email", "id", "name", "provider"]); // nothing secret in the reply
+    expect(Object.keys(res.body.user).sort()).toEqual(["email", "emailVerified", "id", "name", "provider"]); // nothing secret in the reply
 
     const cookie = String(res.headers["set-cookie"]);
     expect(cookie).toMatch(/pf_session=/);
@@ -23,15 +25,13 @@ describe("email signup", () => {
 
     expect((await me.get("/auth/me")).body.user.email).toBe("buyer1@example.com");
 
-    const [rows] = await db.execute("SELECT password_hash FROM shop_customers");
-    const stored = (rows as { password_hash: string }[])[0]!.password_hash;
+    const stored = (await db.customer.findFirstOrThrow()).passwordHash!;
     expect(stored).toMatch(/^\$argon2id\$/);
     expect(stored).not.toContain("Saree2026");
 
     // the database keeps only a hash of the session token, so a leaked table cannot be used to sign in
     const token = /pf_session=([^;]+)/.exec(cookie)![1]!;
-    const [sessions] = await db.execute("SELECT token_hash FROM shop_sessions");
-    expect((sessions as { token_hash: string }[])[0]!.token_hash).not.toBe(token);
+    expect((await db.session.findFirstOrThrow()).tokenHash).not.toBe(token);
   });
 
   it("says exactly what is wrong with each field", async () => {
@@ -52,7 +52,7 @@ describe("email signup", () => {
     });
     expect((await browser(app).post("/auth/signup", { ...person(), password: "12345678" })).body.errors.password).toBe("Password needs at least one letter.");
     expect((await browser(app).post("/auth/signup", { ...person(), password: "abcdefgh" })).body.errors.password).toBe("Password needs at least one number.");
-    expect(await count("SELECT COUNT(*) AS n FROM shop_customers")).toBe(0);
+    expect(await customers()).toBe(0);
   });
 
   it("refuses a second account for the same email, whatever the letter case, and names the field", async () => {
@@ -61,7 +61,7 @@ describe("email signup", () => {
     const again = await browser(app).post("/auth/signup", { ...person(2), email: "  BUYER1@Example.com " });
     expect(again.status).toBe(409);
     expect(again.body).toMatchObject({ field: "email", message: "An account with this email already exists. Please sign in instead." });
-    expect(await count("SELECT COUNT(*) AS n FROM shop_customers")).toBe(1);
+    expect(await customers()).toBe(1);
   });
 
   it("lets exactly one of several simultaneous signups with the same email through", async () => {
@@ -69,7 +69,7 @@ describe("email signup", () => {
     const results = await Promise.all(Array.from({ length: 5 }, () => browser(app).post("/auth/signup", person())));
     expect(results.filter((res) => res.status === 201)).toHaveLength(1);
     expect(results.filter((res) => res.status === 409)).toHaveLength(4);
-    expect(await count("SELECT COUNT(*) AS n FROM shop_customers")).toBe(1);
+    expect(await customers()).toBe(1);
   });
 });
 
@@ -102,7 +102,7 @@ describe("email login and logout", () => {
     expect((await me.post("/auth/logout")).status).toBe(204);
     expect((await me.get("/auth/me")).status).toBe(401);
     // replaying the old cookie by hand no longer works either
-    const replay = await request(app).get("/auth/me").set("Cookie", `pf_session=${token}`);
+    const replay = await request(app).get(apiPrefix + "/auth/me").set("Cookie", `pf_session=${token}`);
     expect(replay.status).toBe(401);
   });
 
@@ -123,12 +123,12 @@ describe("email login and logout", () => {
 describe("request origin (CSRF)", () => {
   it("refuses changes that do not come from the website", async () => {
     const { app } = makeApp();
-    const noOrigin = await request(app).post("/auth/signup").send(person());
+    const noOrigin = await request(app).post(apiPrefix + "/auth/signup").send(person());
     expect(noOrigin.status).toBe(403);
-    const foreign = await request(app).post("/auth/signup").set("Origin", "https://evil.example").send(person());
+    const foreign = await request(app).post(apiPrefix + "/auth/signup").set("Origin", "https://evil.example").send(person());
     expect(foreign.status).toBe(403);
-    expect(await count("SELECT COUNT(*) AS n FROM shop_customers")).toBe(0);
-    expect((await request(app).post("/auth/signup").set("Origin", origin).send(person())).status).toBe(201);
+    expect(await customers()).toBe(0);
+    expect((await request(app).post(apiPrefix + "/auth/signup").set("Origin", origin).send(person())).status).toBe(201);
   });
 
   it("only allows the website to read responses with cookies (CORS)", async () => {
@@ -150,8 +150,8 @@ describe("Google sign-in", () => {
 
     const second = await browser(app).post("/auth/google", { credential: googleToken({ email: "meera@gmail.com", name: "Meera K" }) });
     expect(second.body.user.id).toBe(first.body.user.id);
-    expect(await count("SELECT COUNT(*) AS n FROM shop_customers")).toBe(1);
-    expect(await count("SELECT COUNT(*) AS n FROM shop_customer_identities")).toBe(1);
+    expect(await customers()).toBe(1);
+    expect(await db.customerIdentity.count()).toBe(1);
   });
 
   it("uses the same account when the email already signed up with a password, and discards an unproven password", async () => {
@@ -162,7 +162,7 @@ describe("Google sign-in", () => {
 
     const owner = await browser(app).post("/auth/google", { credential: googleToken({ email: "buyer1@example.com" }) });
     expect(owner.status).toBe(200);
-    expect(await count("SELECT COUNT(*) AS n FROM shop_customers")).toBe(1);
+    expect(await customers()).toBe(1);
 
     // the pre-registered password no longer works and the session it opened is gone
     expect((await attacker.get("/auth/me")).status).toBe(401);
@@ -186,7 +186,7 @@ describe("Google sign-in", () => {
     const res = await browser(app).post("/auth/signup", { name: "Meera", email: "meera@gmail.com", password: "Saree2026" });
     expect(res.status).toBe(409);
     expect(res.body).toMatchObject({ field: "email", message: "This email is already registered through Google. Please use Continue with Google." });
-    expect(await count("SELECT COUNT(*) AS n FROM shop_customers")).toBe(1);
+    expect(await customers()).toBe(1);
   });
 
   it("rejects tokens Google would not vouch for", async () => {
@@ -198,7 +198,7 @@ describe("Google sign-in", () => {
     expect(garbage.status).toBe(401);
     expect(garbage.body.message).toBe("Google sign-in could not be verified. Please try again.");
     expect((await browser(app).post("/auth/google", {})).status).toBe(422);
-    expect(await count("SELECT COUNT(*) AS n FROM shop_customers")).toBe(0);
+    expect(await customers()).toBe(0);
   });
 
   it("says plainly when Google sign-in is not configured on the server", async () => {
@@ -217,10 +217,11 @@ describe("forgot password", () => {
 
     const forgot = await browser(app).post("/auth/password/forgot", { email: "buyer1@example.com" });
     expect(forgot.status).toBe(200);
-    expect(sent).toHaveLength(1);
-    expect(sent[0]!.to).toBe("buyer1@example.com");
-    const [stored] = await db.execute("SELECT code_hash FROM shop_password_resets");
-    expect((stored as { code_hash: string }[])[0]!.code_hash).not.toContain(lastCode());
+    // signup already sent the verification link; the reset code is the second email
+    expect(sent).toHaveLength(2);
+    expect(sent[1]!.to).toBe("buyer1@example.com");
+    expect(sent[1]!.subject).toMatch(/password reset code/);
+    expect((await db.passwordReset.findFirstOrThrow()).codeHash).not.toContain(lastCode());
 
     const wrong = await browser(app).post("/auth/password/reset", { email: "buyer1@example.com", code: "000000", password: "NewSaree2027" });
     expect(wrong.status).toBe(400);

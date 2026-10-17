@@ -1,0 +1,126 @@
+// Store API database (MySQL 8). Every table starts with shop_ so it can share a database with the ERP without touching an ERP table.
+//
+// What this schema owns: the website CUSTOMER (login, sessions, saved addresses).
+// What it deliberately does NOT own: products, prices, stock and orders. Those belong to the ERP until an integration is
+// agreed (see docs/ERP_INTEGRATION.md), so there are no product, inventory or order tables here.
+//
+// Change the schema with:  pnpm api:migrate:dev -- --name what_changed   (creates a new numbered migration, never edits an old one)
+// Apply migrations on a server with:  pnpm api:migrate
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id    Int    @id @default(autoincrement())
+  name  String @db.VarChar(80)
+  /// Always stored lower-case. The UNIQUE key is what guarantees one account per email, whatever the sign-in method.
+  email String @unique(map: "uq_shop_customers_email") @db.VarChar(254)
+  /// NULL for an account created with Google that has never set a password.
+  passwordHash String? @map("password_hash") @db.VarChar(255)
+  /// Set when Google, a verification link or a reset code has proven the owner controls the address.
+  /// (There is no mobile number on the customer at all: delivery numbers belong to addresses, so the two can never be mixed up.)
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  pictureUrl      String?   @map("picture_url") @db.VarChar(500)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  identities         CustomerIdentity[]
+  sessions           Session[]
+  addresses          Address[]
+  passwordResets     PasswordReset[]
+  emailVerifications EmailVerification[]
+
+  @@map("shop_customers")
+}
+
+/// One row per outside sign-in method linked to a customer (Google today).
+model CustomerIdentity {
+  id             Int      @id @default(autoincrement())
+  customerId     Int      @map("customer_id")
+  provider       String   @db.VarChar(20)
+  providerUserId String   @map("provider_user_id") @db.VarChar(191)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId], map: "uq_shop_identity")
+  @@index([customerId], map: "idx_shop_identity_customer")
+  @@map("shop_customer_identities")
+}
+
+/// Server-side sessions. The browser holds a random token in an httpOnly cookie; only its SHA-256 hash is stored here,
+/// so a copy of this table cannot be used to sign in.
+model Session {
+  id         Int      @id @default(autoincrement())
+  customerId Int      @map("customer_id")
+  tokenHash  String   @unique(map: "uq_shop_sessions_token") @map("token_hash") @db.Char(64)
+  createdAt  DateTime @default(now()) @map("created_at")
+  expiresAt  DateTime @map("expires_at")
+  userAgent  String?  @map("user_agent") @db.VarChar(255)
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId], map: "idx_shop_sessions_customer")
+  @@index([expiresAt], map: "idx_shop_sessions_expiry")
+  @@map("shop_sessions")
+}
+
+/// The customer's address book. `phone` is the delivery contact (ten digits) and is NOT the login.
+model Address {
+  id            Int      @id @default(autoincrement())
+  customerId    Int      @map("customer_id")
+  type          String   @default("Home") @db.VarChar(10)
+  label         String   @default("") @db.VarChar(30)
+  recipientName String   @map("recipient_name") @db.VarChar(80)
+  phone         String   @db.Char(10)
+  /// Optional second contact number for the courier.
+  alternatePhone String? @map("alternate_phone") @db.Char(10)
+  house         String   @db.VarChar(120)
+  street        String   @db.VarChar(160)
+  city          String   @db.VarChar(60)
+  state         String   @db.VarChar(60)
+  pincode       String   @db.Char(6)
+  isDefault     Boolean  @default(false) @map("is_default")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId], map: "idx_shop_addresses_customer")
+  @@map("shop_customer_addresses")
+}
+
+/// Password-reset codes: six digits, stored hashed, short-lived, limited attempts.
+model PasswordReset {
+  id         Int      @id @default(autoincrement())
+  customerId Int      @map("customer_id")
+  codeHash   String   @map("code_hash") @db.Char(64)
+  attempts   Int      @default(0)
+  createdAt  DateTime @default(now()) @map("created_at")
+  expiresAt  DateTime @map("expires_at")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId], map: "idx_shop_resets_customer")
+  @@map("shop_password_resets")
+}
+
+/// Email-verification links: a random token (only its hash is stored), valid for 24 hours, single use.
+model EmailVerification {
+  id         Int      @id @default(autoincrement())
+  customerId Int      @map("customer_id")
+  tokenHash  String   @unique(map: "uq_shop_email_verification_token") @map("token_hash") @db.Char(64)
+  createdAt  DateTime @default(now()) @map("created_at")
+  expiresAt  DateTime @map("expires_at")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId], map: "idx_shop_email_verification_customer")
+  @@map("shop_email_verifications")
+}

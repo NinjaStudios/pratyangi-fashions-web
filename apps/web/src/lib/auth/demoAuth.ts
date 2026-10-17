@@ -30,7 +30,8 @@ async function hash(password: string, salt: string) {
   return toHex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${salt}:${password}`)));
 }
 
-const publicUser = (user: StoredUser): AuthUser => ({ id: user.id, name: user.name, email: user.email, provider: "password" });
+// the demo pretends nothing about email: every demo account counts as verified so no banner appears
+const publicUser = (user: StoredUser): AuthUser => ({ id: user.id, name: user.name, email: user.email, provider: "password", emailVerified: true });
 const startSession = (user: AuthUser) => {
   window.localStorage.setItem(sessionKey, JSON.stringify(user));
   return user;
@@ -70,7 +71,7 @@ export const demoAuth: AuthClient = {
   async signInWithGoogle(credential) {
     const claims = decodeGoogleCredential(credential);
     if (!claims.email) throw new AuthError("Google did not share an email address, so we cannot sign you in.");
-    return startSession({ id: `google-${claims.sub ?? claims.email}`, name: claims.name ?? claims.email, email: claims.email, provider: "google", picture: claims.picture });
+    return startSession({ id: `google-${claims.sub ?? claims.email}`, name: claims.name ?? claims.email, email: claims.email, provider: "google", emailVerified: true, picture: claims.picture });
   },
 
   async startPasswordReset() {
@@ -83,6 +84,17 @@ export const demoAuth: AuthClient = {
     const salt = randomSalt();
     const hashed = await hash(password, salt);
     writeUsers(readUsers().map((stored) => (stored.id === user.id ? { ...stored, salt, hash: hashed } : stored)));
+  },
+
+  async verifyEmail(token) {
+    // review only: the link `/verify-email?token=demo-valid-token-0123456789` shows the success screen, anything else the failure one
+    if (token !== "demo-valid-token-0123456789") throw new AuthError("This verification link is invalid, has expired or was already used. If your email is not verified yet, sign in and request a new link.", "token");
+    const saved = window.localStorage.getItem(sessionKey);
+    return saved ? (JSON.parse(saved) as AuthUser) : { id: "demo", name: "Demo", email: "demo@example.com", provider: "password", emailVerified: true };
+  },
+
+  async resendVerification() {
+    return "Your email is already verified.";
   },
 
   async signOut() {

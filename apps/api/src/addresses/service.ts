@@ -1,30 +1,25 @@
-import type { ResultSetHeader } from "mysql2/promise";
-import { inTransaction, type Db } from "../db.js";
+import type { Address } from "@prisma/client";
+import type { Db } from "../db.js";
 import { HttpError, notFound } from "../errors.js";
 import type { AddressInput } from "../validation.js";
 
 const maxAddresses = 10;
-
-type Row = {
-  id: number | string; type: "Home" | "Office" | "Other"; label: string; recipient_name: string; phone: string; house: string;
-  street: string; city: string; state: string; pincode: string; is_default: number;
-};
+const gone = () => notFound("We could not find that address. It may have been deleted.");
 
 /** The shape the website's checkout already uses (SavedAddress in apps/web/src/lib/checkout.ts). */
 export type AddressDto = {
-  id: string; type: Row["type"]; label: string; isDefault: boolean; name: string; phone: string;
+  id: string; type: "Home" | "Office" | "Other"; label: string; isDefault: boolean; name: string; phone: string; alternatePhone?: string;
   house: string; street: string; city: string; state: string; pincode: string;
 };
 
-const columns = "id, type, label, recipient_name, phone, house, street, city, state, pincode, is_default";
-
-export const toDto = (row: Row): AddressDto => ({
+export const toDto = (row: Address): AddressDto => ({
   id: String(row.id),
-  type: row.type,
+  type: row.type as AddressDto["type"],
   label: row.label || row.type,
-  isDefault: row.is_default === 1,
-  name: row.recipient_name,
+  isDefault: row.isDefault,
+  name: row.recipientName,
   phone: `+91 ${row.phone}`,
+  ...(row.alternatePhone ? { alternatePhone: `+91 ${row.alternatePhone}` } : {}),
   house: row.house,
   street: row.street,
   city: row.city,
@@ -33,78 +28,72 @@ export const toDto = (row: Row): AddressDto => ({
 });
 
 // the label is only stored when it is a custom one ("PG"); otherwise the list shows the type
-const storedLabel = (input: AddressInput) => (input.label === input.type ? "" : input.label);
+const columns = (input: AddressInput) => ({
+  type: input.type,
+  label: input.label === input.type ? "" : input.label,
+  recipientName: input.name,
+  phone: input.phone,
+  alternatePhone: input.alternatePhone || null,
+  house: input.house,
+  street: input.street,
+  city: input.city,
+  state: input.state,
+  pincode: input.pincode,
+});
 
 export type AddressService = ReturnType<typeof createAddressService>;
 
 /** Every query is scoped to `customerId`, so one customer can never read or change another one's addresses. */
 export function createAddressService(db: Db) {
-  const list = async (customerId: string) => {
-    const [rows] = await db.execute(`SELECT ${columns} FROM shop_customer_addresses WHERE customer_id = ? ORDER BY is_default DESC, id ASC`, [customerId]);
-    return (rows as Row[]).map(toDto);
-  };
-
-  const one = async (customerId: string, id: string) => {
-    const [rows] = await db.execute(`SELECT ${columns} FROM shop_customer_addresses WHERE customer_id = ? AND id = ?`, [customerId, id]);
-    const row = (rows as Row[])[0];
-    if (!row) throw notFound("We could not find that address. It may have been deleted.");
-    return toDto(row);
-  };
+  const list = async (customerId: number) => (await db.address.findMany({ where: { customerId }, orderBy: [{ isDefault: "desc" }, { id: "asc" }] })).map(toDto);
 
   return {
     list,
 
-    async create(customerId: string, input: AddressInput): Promise<AddressDto> {
-      const id = await inTransaction(db, async (connection) => {
-        const [counted] = await connection.execute("SELECT COUNT(*) AS total FROM shop_customer_addresses WHERE customer_id = ? FOR UPDATE", [customerId]);
-        const total = Number((counted as { total: number }[])[0]?.total ?? 0);
+    async create(customerId: number, input: AddressInput): Promise<AddressDto> {
+      const created = await db.$transaction(async (tx) => {
+        // lock this customer's row so two simultaneous saves cannot both slip past the limit or both become the default
+        await tx.$queryRaw`SELECT id FROM shop_customers WHERE id = ${customerId} FOR UPDATE`;
+        const total = await tx.address.count({ where: { customerId } });
         if (total >= maxAddresses) throw new HttpError(422, `You can save up to ${maxAddresses} addresses. Please delete one to add another.`);
         // the first address is the default; later ones only if asked
         const makeDefault = total === 0 || input.isDefault === true;
-        if (makeDefault) await connection.execute("UPDATE shop_customer_addresses SET is_default = 0 WHERE customer_id = ?", [customerId]);
-        const [result] = await connection.execute<ResultSetHeader>(
-          `INSERT INTO shop_customer_addresses (customer_id, type, label, recipient_name, phone, house, street, city, state, pincode, is_default)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [customerId, input.type, storedLabel(input), input.name, input.phone, input.house, input.street, input.city, input.state, input.pincode, makeDefault ? 1 : 0],
-        );
-        return result.insertId;
+        if (makeDefault) await tx.address.updateMany({ where: { customerId }, data: { isDefault: false } });
+        return tx.address.create({ data: { customerId, ...columns(input), isDefault: makeDefault } });
       });
-      return one(customerId, String(id));
+      return toDto(created);
     },
 
-    async update(customerId: string, id: string, input: AddressInput): Promise<AddressDto> {
-      await inTransaction(db, async (connection) => {
-        if (input.isDefault === true) await connection.execute("UPDATE shop_customer_addresses SET is_default = 0 WHERE customer_id = ?", [customerId]);
-        const [result] = await connection.execute<ResultSetHeader>(
-          `UPDATE shop_customer_addresses
-              SET type = ?, label = ?, recipient_name = ?, phone = ?, house = ?, street = ?, city = ?, state = ?, pincode = ?,
-                  is_default = IF(? = 1, 1, is_default)
-            WHERE customer_id = ? AND id = ?`,
-          [input.type, storedLabel(input), input.name, input.phone, input.house, input.street, input.city, input.state, input.pincode, input.isDefault === true ? 1 : 0, customerId, id],
-        );
-        if (result.affectedRows === 0) throw notFound("We could not find that address. It may have been deleted.");
+    async update(customerId: number, id: number, input: AddressInput): Promise<AddressDto> {
+      const updated = await db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM shop_customers WHERE id = ${customerId} FOR UPDATE`;
+        if (!(await tx.address.findFirst({ where: { id, customerId }, select: { id: true } }))) throw gone();
+        if (input.isDefault === true) await tx.address.updateMany({ where: { customerId }, data: { isDefault: false } });
+        return tx.address.update({ where: { id }, data: { ...columns(input), ...(input.isDefault === true ? { isDefault: true } : {}) } });
       });
-      return one(customerId, id);
+      return toDto(updated);
     },
 
-    async remove(customerId: string, id: string): Promise<void> {
-      await inTransaction(db, async (connection) => {
-        const [rows] = await connection.execute("SELECT is_default FROM shop_customer_addresses WHERE customer_id = ? AND id = ? FOR UPDATE", [customerId, id]);
-        const row = (rows as { is_default: number }[])[0];
-        if (!row) throw notFound("We could not find that address. It may have been deleted.");
-        await connection.execute("DELETE FROM shop_customer_addresses WHERE customer_id = ? AND id = ?", [customerId, id]);
+    async remove(customerId: number, id: number): Promise<void> {
+      await db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM shop_customers WHERE id = ${customerId} FOR UPDATE`;
+        const row = await tx.address.findFirst({ where: { id, customerId } });
+        if (!row) throw gone();
+        await tx.address.delete({ where: { id } });
         // if the default went, the newest remaining address takes its place
-        if (row.is_default === 1) {
-          await connection.execute("UPDATE shop_customer_addresses SET is_default = 1 WHERE customer_id = ? ORDER BY id DESC LIMIT 1", [customerId]);
+        if (row.isDefault) {
+          const newest = await tx.address.findFirst({ where: { customerId }, orderBy: { id: "desc" }, select: { id: true } });
+          if (newest) await tx.address.update({ where: { id: newest.id }, data: { isDefault: true } });
         }
       });
     },
 
-    async setDefault(customerId: string, id: string): Promise<AddressDto[]> {
-      await inTransaction(db, async (connection) => {
-        const [rows] = await connection.execute("SELECT id FROM shop_customer_addresses WHERE customer_id = ? AND id = ? FOR UPDATE", [customerId, id]);
-        if (!(rows as unknown[]).length) throw notFound("We could not find that address. It may have been deleted.");
-        await connection.execute("UPDATE shop_customer_addresses SET is_default = IF(id = ?, 1, 0) WHERE customer_id = ?", [id, customerId]);
+    async setDefault(customerId: number, id: number): Promise<AddressDto[]> {
+      await db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM shop_customers WHERE id = ${customerId} FOR UPDATE`;
+        if (!(await tx.address.findFirst({ where: { id, customerId }, select: { id: true } }))) throw gone();
+        await tx.address.updateMany({ where: { customerId }, data: { isDefault: false } });
+        await tx.address.update({ where: { id }, data: { isDefault: true } });
       });
       return list(customerId);
     },

@@ -1,8 +1,9 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { Prisma } from "@prisma/client";
 import { browser, db, makeApp, person, resetDatabase } from "./helpers.js";
 
 beforeEach(resetDatabase);
-afterAll(() => db.end());
+afterAll(() => db.$disconnect());
 
 const home = {
   type: "Home",
@@ -55,8 +56,7 @@ describe("saving addresses", () => {
     expect(a.body.address.phone).toBe("+91 9876543210");
     expect(b.body.address.phone).toBe("+91 9123456789");
     expect(b.body.address.label).toBe("Shop");
-    const [columns] = await db.execute("SHOW COLUMNS FROM shop_customers");
-    expect((columns as { Field: string }[]).map((column) => column.Field)).not.toContain("phone");
+    expect(Object.keys(Prisma.CustomerScalarFieldEnum)).not.toContain("phone");
   });
 
   it("says exactly what is wrong with each field", async () => {
@@ -84,6 +84,26 @@ describe("saving addresses", () => {
     expect((await me.post("/addresses", { ...home, phone: "5876543210" })).body.errors.phone).toMatch(/starts with 6, 7, 8 or 9/);
     expect((await me.post("/addresses", { ...home, pincode: "5000" })).body.errors.pincode).toMatch(/valid 6-digit PIN/);
     expect((await me.get("/addresses")).body.addresses).toHaveLength(0);
+  });
+
+  it("keeps an optional alternate number, checks it, and lets it be removed", async () => {
+    const { me } = await signedInClient();
+    const created = await me.post("/addresses", { ...home, alternatePhone: "+91 91234 56789" });
+    expect(created.body.address.alternatePhone).toBe("+91 9123456789");
+    expect((await me.post("/addresses", { ...home, alternatePhone: "123" })).body.errors.alternatePhone).toBe("Enter a valid 10-digit alternate number that starts with 6, 7, 8 or 9, or leave it empty.");
+    const cleared = await me.put(`/addresses/${created.body.address.id}`, { ...home, alternatePhone: "" });
+    expect(cleared.body.address.alternatePhone).toBeUndefined();
+    expect((await me.post("/addresses", home)).body.address.alternatePhone).toBeUndefined();
+  });
+
+  it("lets exactly ten of many simultaneous saves through", async () => {
+    const { me } = await signedInClient();
+    const results = await Promise.all(Array.from({ length: 14 }, () => me.post("/addresses", home)));
+    expect(results.filter((res) => res.status === 201)).toHaveLength(10);
+    expect(results.filter((res) => res.status === 422)).toHaveLength(4);
+    const list = (await me.get("/addresses")).body.addresses;
+    expect(list).toHaveLength(10);
+    expect(list.filter((address: { isDefault: boolean }) => address.isDefault)).toHaveLength(1);
   });
 
   it("allows at most ten addresses", async () => {

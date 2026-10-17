@@ -9,6 +9,7 @@ import { useSession } from "@/lib/auth";
 import { useBag } from "@/lib/bag";
 import { homeProducts } from "@/lib/catalog";
 import { AccountShell } from "./AccountShell";
+import { EmailVerifyNotice } from "./EmailVerifyNotice";
 import styles from "./AccountPages.module.css";
 
 export function AccountOverview() {
@@ -18,6 +19,7 @@ export function AccountOverview() {
 
   return (
     <AccountShell active="overview" title="My Account" subtitle="Manage your orders, addresses and more">
+      <EmailVerifyNotice />
       <div className={styles.profile}>
         <Image className={styles.profileMark} src="/images/figma/lotus-emblem.svg" alt="" width={150} height={150} />
         <span className={styles.avatar}>

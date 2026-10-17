@@ -43,6 +43,7 @@ export const signupSchema = z.object({ name: nameField, email: emailField, passw
 export const loginSchema = z.object({ email: emailField, password: required("Enter your password.") });
 export const googleSchema = z.object({ credential: required("Google did not send a sign-in token. Please try again.") });
 export const forgotSchema = z.object({ email: emailField });
+export const verifyEmailSchema = z.object({ token: z.string({ error: "This verification link is incomplete." }).trim().min(20, { error: "This verification link is incomplete." }).max(200, { error: "This verification link is incomplete." }) });
 export const resetSchema = z.object({
   email: emailField,
   code: z.string({ error: "Enter the 6-digit code." }).trim().regex(/^\d{6}$/, { error: "The code is 6 digits." }),
@@ -60,6 +61,12 @@ export const addressSchema = z.object({
   label: z.string().trim().max(30, { error: "The label is too long (30 characters at most)." }).default(""),
   name: z.string({ error: "Enter the recipient's full name." }).trim().min(2, { error: "Enter the recipient's full name (at least 2 characters)." }).max(80, { error: "That name is too long (80 characters at most)." }),
   phone: phoneField,
+  alternatePhone: z
+    .string()
+    .optional()
+    .transform((value) => (value ? normalisePhone(value) : ""))
+    .refine((digits) => digits === "" || /^[6-9]\d{9}$/.test(digits), { error: "Enter a valid 10-digit alternate number that starts with 6, 7, 8 or 9, or leave it empty." })
+    .transform((digits) => digits || undefined),
   house: z.string({ error: "Enter the house, flat or building number." }).trim().min(1, { error: "Enter the house, flat or building number." }).max(120, { error: "That is too long (120 characters at most)." }),
   street: z.string({ error: "Enter the street, area or landmark." }).trim().min(1, { error: "Enter the street, area or landmark." }).max(160, { error: "That is too long (160 characters at most)." }),
   city: z.string({ error: "Enter the city." }).trim().min(2, { error: "Enter the city." }).max(60, { error: "That city name is too long." }),

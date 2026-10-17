@@ -214,3 +214,23 @@ test.describe("checkout needs an account", () => {
     await expect(page).toHaveURL(/\/login\?next=\/checkout/);
   });
 });
+
+test.describe("email verification page", () => {
+  test("a good link shows the success screen", async ({ page }) => {
+    await page.goto("/verify-email?token=demo-valid-token-0123456789");
+    await expect(page.getByRole("heading", { name: "Email verified" })).toBeVisible();
+    await expect(page.locator("main").getByRole("link", { name: "Sign In", exact: true })).toBeVisible();
+  });
+
+  test("a bad, expired or used link says so and offers the next step", async ({ page }) => {
+    await page.goto("/verify-email?token=this-link-is-not-valid-at-all");
+    await expect(page.getByRole("heading", { name: "This link did not work" })).toBeVisible();
+    await expect(page.getByRole("alert").filter({ hasText: "invalid, has expired or was already used" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Sign in to request a new link" })).toBeVisible();
+  });
+
+  test("opening the page without a link explains what to do", async ({ page }) => {
+    await page.goto("/verify-email");
+    await expect(page.getByRole("heading", { name: "Open the link from your email" })).toBeVisible();
+  });
+});

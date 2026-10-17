@@ -9,6 +9,7 @@ const pages = [
   { path: "/login", title: "Sign In | Pratyangi Fashions" },
   { path: "/signup", title: "Create Account | Pratyangi Fashions" },
   { path: "/forgot-password", title: "Reset Password | Pratyangi Fashions" },
+  { path: "/verify-email", title: "Verify Email | Pratyangi Fashions" },
   { path: "/account", title: "My Account | Pratyangi Fashions" },
   { path: "/account/orders", title: "My Orders | Pratyangi Fashions" },
 ];

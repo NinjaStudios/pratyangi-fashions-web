@@ -15,6 +15,8 @@ export * from "./validation";
  *  - "off":  neither is set. Nothing pretends to work: the forms explain that accounts are not connected yet.
  */
 export const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "";
+/** Where the store API lives: every call goes to <address>/api/v1/... */
+export const apiRoot = apiBaseUrl ? `${apiBaseUrl}/api/v1` : "";
 export const authMode: "api" | "demo" | "off" = apiBaseUrl ? "api" : process.env.NEXT_PUBLIC_AUTH_DEMO === "true" ? "demo" : "off";
 
 export const notConnectedMessage = "Accounts are not connected yet: the store server has not been set up, so signing in is not available right now.";
@@ -27,11 +29,13 @@ const offAuth: AuthClient = {
   signInWithGoogle: async () => notConnected(),
   startPasswordReset: async () => notConnected(),
   finishPasswordReset: async () => notConnected(),
+  verifyEmail: async () => notConnected(),
+  resendVerification: async () => notConnected(),
   signOut: async () => undefined,
   current: async () => null,
 };
 
-export const authClient: AuthClient = authMode === "api" ? createApiAuth(apiBaseUrl) : authMode === "demo" ? demoAuth : offAuth;
+export const authClient: AuthClient = authMode === "api" ? createApiAuth(apiRoot) : authMode === "demo" ? demoAuth : offAuth;
 export const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
 // ---- the signed-in user, shared by the header, the account pages and the forms -----------------------------------------

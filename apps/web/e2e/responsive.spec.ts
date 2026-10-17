@@ -3,7 +3,7 @@ import { scrollThrough } from "./helpers";
 
 // Every page must fit every phone / tablet / laptop width: nothing wider than the screen, header icons comfortable to tap.
 const widths = [320, 360, 375, 414, 480, 600, 768, 900, 1024, 1280];
-const pages = ["/", "/new-arrivals", "/bag", "/checkout", "/account", "/account/orders", "/login", "/signup", "/forgot-password"];
+const pages = ["/", "/new-arrivals", "/bag", "/checkout", "/account", "/account/orders", "/login", "/signup", "/forgot-password", "/verify-email"];
 
 test.describe.configure({ mode: "parallel" });
 test.skip(({ isMobile }) => isMobile, "widths are set by the test itself; the desktop project covers them");

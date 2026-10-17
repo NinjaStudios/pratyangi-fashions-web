@@ -34,6 +34,8 @@ export function createApiAuth(baseUrl: string): AuthClient {
     finishPasswordReset: async (input) => {
       await call("/auth/password/reset", { method: "POST", body: input });
     },
+    verifyEmail: async (token) => (await call<{ customer: AuthUser }>("/auth/email/verify", { method: "POST", body: { token } })).customer,
+    resendVerification: async () => (await call<{ message: string }>("/auth/email/resend", { method: "POST", body: {} })).message,
     signOut: async () => {
       await call("/auth/logout", { method: "POST" });
     },
