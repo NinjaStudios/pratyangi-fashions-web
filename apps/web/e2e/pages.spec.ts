@@ -14,6 +14,8 @@ const pages = [
 
 for (const { path, title } of pages) {
   test(`${path} loads cleanly`, async ({ page }) => {
+    // signed in, so /checkout shows the checkout rather than redirecting to sign in
+    await page.addInitScript(() => window.localStorage.setItem("pratyangi-demo-session", JSON.stringify({ id: "u1", name: "Test Buyer", email: "buyer@example.com", provider: "password" })));
     const problems = collectProblems(page);
 
     await page.goto(path);
